@@ -1,309 +1,133 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Tabela Interativa - Apresentação</title>
+<title>Tabela Interativa</title>
 
-    <!-- DataTables CSS -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
-    />
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.6.2/css/colReorder.dataTables.min.css">
 
-    <!-- Buttons CSS -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"
-    />
+<style>
+body{
+    font-family: Arial, sans-serif;
+    margin:20px;
+    background:#f5f7fa;
+}
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: #f5f7fa;
-        }
+.container{
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    overflow-x:auto;
+}
 
-        .container {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-        }
+h1{
+    margin-top:0;
+    color:#003366;
+}
 
-        h1 {
-            margin-top: 0;
-            color: #003366;
-        }
+table.dataTable {
+    width: 100% !important;
+}
+</style>
 
-        p {
-            color: #555;
-        }
-
-        table.dataTable thead th {
-            background: #005a9c;
-            color: #ffffff;
-            text-align: center;
-        }
-
-        table.dataTable tbody td {
-            text-align: center;
-        }
-
-        .dt-buttons {
-            margin-bottom: 15px;
-        }
-    </style>
 </head>
 
 <body>
 
-    <div class="container">
+<div class="container">
 
-        <h1>Dashboard de Equipe Corporativa</h1>
+<h1>Equipe Corporativa</h1>
 
-        <p>
-            Exemplo de tabela interativa para apresentações,
-            relatórios e dashboards internos.
-        </p>
+<table id="tabela" class="display nowrap">
 
-        <table
-            id="tabela"
-            class="display nowrap"
-            style="width:100%"
-        >
+<thead>
+<tr>
+    <th>Nome</th>
+    <th>Cargo</th>
+    <th>Cidade</th>
+    <th>Departamento</th>
+    <th>Idade</th>
+    <th>Salário</th>
+    <th>Status</th>
+    <th>Data Admissão</th>
+    <th>Performance</th>
+</tr>
+</thead>
 
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Cargo</th>
-                    <th>Cidade</th>
-                    <th>Departamento</th>
-                    <th>Idade</th>
-                    <th>Salário</th>
-                    <th>Status</th>
-                    <th>Data Admissão</th>
-                    <th>Performance</th>
-                </tr>
-            </thead>
+<tbody>
 
-            <tbody>
+<tr><td>João Silva</td><td>Designer</td><td>São Paulo</td><td>Marketing</td><td>29</td><td>R$ 5.200</td><td>Ativo</td><td>12/03/2021</td><td>92%</td></tr>
+<tr><td>Maria Oliveira</td><td>Desenvolvedora</td><td>Rio de Janeiro</td><td>Tecnologia</td><td>31</td><td>R$ 8.400</td><td>Ativo</td><td>05/09/2020</td><td>97%</td></tr>
+<tr><td>Carlos Souza</td><td>Analista</td><td>Belo Horizonte</td><td>Financeiro</td><td>35</td><td>R$ 6.700</td><td>Ativo</td><td>17/01/2019</td><td>88%</td></tr>
+<tr><td>Ana Costa</td><td>Coordenadora</td><td>Curitiba</td><td>RH</td><td>38</td><td>R$ 9.100</td><td>Ativo</td><td>11/11/2018</td><td>95%</td></tr>
+<tr><td>Fernanda Lima</td><td>UX Designer</td><td>Florianópolis</td><td>Produto</td><td>27</td><td>R$ 6.300</td><td>Férias</td><td>22/06/2022</td><td>90%</td></tr>
+<tr><td>Ricardo Mendes</td><td>Gerente</td><td>Campinas</td><td>Operações</td><td>41</td><td>R$ 12.500</td><td>Ativo</td><td>15/04/2017</td><td>98%</td></tr>
+<tr><td>Patrícia Rocha</td><td>Analista Dados</td><td>Brasília</td><td>BI</td><td>30</td><td>R$ 7.800</td><td>Ativo</td><td>09/08/2021</td><td>91%</td></tr>
+<tr><td>Eduardo Martins</td><td>DevOps</td><td>Porto Alegre</td><td>Tecnologia</td><td>33</td><td>R$ 9.600</td><td>Ativo</td><td>14/02/2020</td><td>94%</td></tr>
+<tr><td>Juliana Ferreira</td><td>Assistente</td><td>Recife</td><td>Administrativo</td><td>26</td><td>R$ 3.900</td><td>Ativo</td><td>02/12/2023</td><td>85%</td></tr>
+<tr><td>Lucas Almeida</td><td>SEO</td><td>Fortaleza</td><td>Marketing</td><td>32</td><td>R$ 5.900</td><td>Licença</td><td>18/05/2022</td><td>89%</td></tr>
+<tr><td>Camila Santos</td><td>Product Owner</td><td>Salvador</td><td>Produto</td><td>36</td><td>R$ 11.300</td><td>Ativo</td><td>21/10/2019</td><td>96%</td></tr>
+<tr><td>Bruno Ribeiro</td><td>QA Tester</td><td>Goiânia</td><td>Qualidade</td><td>28</td><td>R$ 5.400</td><td>Ativo</td><td>07/07/2021</td><td>87%</td></tr>
 
-                <tr>
-                    <td>001</td>
-                    <td>João Silva</td>
-                    <td>Designer</td>
-                    <td>São Paulo</td>
-                    <td>Marketing</td>
-                    <td>29</td>
-                    <td>R$ 5.200</td>
-                    <td>Ativo</td>
-                    <td>12/03/2021</td>
-                    <td>92%</td>
-                </tr>
+<!-- 🔥 MAIS DADOS PARA DEMONSTRAÇÃO -->
+<tr><td>Paulo Henrique</td><td>Backend Dev</td><td>São Paulo</td><td>Tecnologia</td><td>34</td><td>R$ 10.200</td><td>Ativo</td><td>10/02/2018</td><td>93%</td></tr>
+<tr><td>Mariana Alves</td><td>RH Business Partner</td><td>Curitiba</td><td>RH</td><td>39</td><td>R$ 8.700</td><td>Ativo</td><td>19/06/2017</td><td>91%</td></tr>
+<tr><td>Thiago Rocha</td><td>Frontend Dev</td><td>Rio de Janeiro</td><td>Tecnologia</td><td>29</td><td>R$ 9.300</td><td>Ativo</td><td>03/03/2020</td><td>95%</td></tr>
+<tr><td>Beatriz Souza</td><td>Marketing Lead</td><td>Salvador</td><td>Marketing</td><td>37</td><td>R$ 11.000</td><td>Ativo</td><td>14/09/2016</td><td>97%</td></tr>
+<tr><td>Rafael Lima</td><td>Data Scientist</td><td>Brasília</td><td>BI</td><td>32</td><td>R$ 13.500</td><td>Ativo</td><td>25/01/2019</td><td>98%</td></tr>
 
-                <tr>
-                    <td>002</td>
-                    <td>Maria Oliveira</td>
-                    <td>Desenvolvedora</td>
-                    <td>Rio de Janeiro</td>
-                    <td>Tecnologia</td>
-                    <td>31</td>
-                    <td>R$ 8.400</td>
-                    <td>Ativo</td>
-                    <td>05/09/2020</td>
-                    <td>97%</td>
-                </tr>
+</tbody>
 
-                <tr>
-                    <td>003</td>
-                    <td>Carlos Souza</td>
-                    <td>Analista Financeiro</td>
-                    <td>Belo Horizonte</td>
-                    <td>Financeiro</td>
-                    <td>35</td>
-                    <td>R$ 6.700</td>
-                    <td>Ativo</td>
-                    <td>17/01/2019</td>
-                    <td>88%</td>
-                </tr>
+</table>
 
-                <tr>
-                    <td>004</td>
-                    <td>Ana Costa</td>
-                    <td>Coordenadora</td>
-                    <td>Curitiba</td>
-                    <td>RH</td>
-                    <td>38</td>
-                    <td>R$ 9.100</td>
-                    <td>Ativo</td>
-                    <td>11/11/2018</td>
-                    <td>95%</td>
-                </tr>
+</div>
 
-                <tr>
-                    <td>005</td>
-                    <td>Fernanda Lima</td>
-                    <td>UX Designer</td>
-                    <td>Florianópolis</td>
-                    <td>Produto</td>
-                    <td>27</td>
-                    <td>R$ 6.300</td>
-                    <td>Férias</td>
-                    <td>22/06/2022</td>
-                    <td>90%</td>
-                </tr>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-                <tr>
-                    <td>006</td>
-                    <td>Ricardo Mendes</td>
-                    <td>Gerente de Projetos</td>
-                    <td>Campinas</td>
-                    <td>Operações</td>
-                    <td>41</td>
-                    <td>R$ 12.500</td>
-                    <td>Ativo</td>
-                    <td>15/04/2017</td>
-                    <td>98%</td>
-                </tr>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-                <tr>
-                    <td>007</td>
-                    <td>Patrícia Rocha</td>
-                    <td>Analista de Dados</td>
-                    <td>Brasília</td>
-                    <td>Business Intelligence</td>
-                    <td>30</td>
-                    <td>R$ 7.800</td>
-                    <td>Ativo</td>
-                    <td>09/08/2021</td>
-                    <td>91%</td>
-                </tr>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
 
-                <tr>
-                    <td>008</td>
-                    <td>Eduardo Martins</td>
-                    <td>DevOps</td>
-                    <td>Porto Alegre</td>
-                    <td>Tecnologia</td>
-                    <td>33</td>
-                    <td>R$ 9.600</td>
-                    <td>Ativo</td>
-                    <td>14/02/2020</td>
-                    <td>94%</td>
-                </tr>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-                <tr>
-                    <td>009</td>
-                    <td>Juliana Ferreira</td>
-                    <td>Assistente Administrativo</td>
-                    <td>Recife</td>
-                    <td>Administrativo</td>
-                    <td>26</td>
-                    <td>R$ 3.900</td>
-                    <td>Ativo</td>
-                    <td>02/12/2023</td>
-                    <td>85%</td>
-                </tr>
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 
-                <tr>
-                    <td>010</td>
-                    <td>Lucas Almeida</td>
-                    <td>Especialista SEO</td>
-                    <td>Fortaleza</td>
-                    <td>Marketing</td>
-                    <td>32</td>
-                    <td>R$ 5.900</td>
-                    <td>Licença</td>
-                    <td>18/05/2022</td>
-                    <td>89%</td>
-                </tr>
+<script src="https://cdn.datatables.net/colreorder/1.6.2/js/dataTables.colReorder.min.js"></script>
 
-                <tr>
-                    <td>011</td>
-                    <td>Camila Santos</td>
-                    <td>Product Owner</td>
-                    <td>Salvador</td>
-                    <td>Produto</td>
-                    <td>36</td>
-                    <td>R$ 11.300</td>
-                    <td>Ativo</td>
-                    <td>21/10/2019</td>
-                    <td>96%</td>
-                </tr>
+<script>
+$(document).ready(function () {
 
-                <tr>
-                    <td>012</td>
-                    <td>Bruno Ribeiro</td>
-                    <td>QA Tester</td>
-                    <td>Goiânia</td>
-                    <td>Qualidade</td>
-                    <td>28</td>
-                    <td>R$ 5.400</td>
-                    <td>Ativo</td>
-                    <td>07/07/2021</td>
-                    <td>87%</td>
-                </tr>
+    $('#tabela').DataTable({
 
-            </tbody>
+        dom: 'Bfrtip',
 
-        </table>
+        buttons: ['csvHtml5', 'excelHtml5'],
 
-    </div>
+        colReorder: true,
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+        scrollX: true,
 
-    <!-- DataTables -->
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        pageLength: 10, // 🔥 AGORA SÃO 10 REGISTROS POR PÁGINA
 
-    <!-- Buttons -->
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+        language: {
+            search: "Pesquisar:",
+            lengthMenu: "Mostrar _MENU_ registros",
+            info: "Mostrando _START_ até _END_ de _TOTAL_ registros",
+            paginate: {
+                previous: "Anterior",
+                next: "Próximo"
+            }
+        }
 
-    <!-- Exportação -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    });
 
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-
-    <script>
-        $(document).ready(function () {
-
-            $('#tabela').DataTable({
-
-                responsive: true,
-
-                pageLength: 5,
-
-                dom: 'Bfrtip',
-
-                buttons: [
-                    'csvHtml5',
-                    'excelHtml5'
-                ],
-
-                language: {
-
-                    search: "Pesquisar:",
-
-                    lengthMenu:
-                        "Mostrar _MENU_ registros",
-
-                    info:
-                        "Mostrando _START_ até _END_ de _TOTAL_ registros",
-
-                    paginate: {
-                        previous: "Anterior",
-                        next: "Próximo"
-                    }
-
-                }
-
-            });
-
-        });
-    </script>
+});
+</script>
 
 </body>
 </html>
