@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>Tabela com Exportação Personalizada</title>
+<title>Tabela Interativa Completa</title>
 
 <!-- DataTables -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -35,6 +35,16 @@ h1{
     color:#003366;
 }
 
+label {
+    font-size: 14px;
+}
+
+select {
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
 table.dataTable {
     width: 100% !important;
 }
@@ -47,6 +57,12 @@ table.dataTable {
 <div class="container">
 
 <h1>Equipe Corporativa</h1>
+
+<!-- 🔥 FILTRO DE ANO -->
+<label for="filtroAno"><strong>Filtrar por ano de admissão:</strong></label>
+<select id="filtroAno">
+    <option value="">Todos</option>
+</select>
 
 <table id="tabela" class="display nowrap" style="width:100%">
 
@@ -96,7 +112,6 @@ table.dataTable {
 
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 
-<!-- 🔥 BOTÃO DE ESCOLHA DE COLUNAS -->
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
 
 <!-- ColReorder -->
@@ -105,7 +120,7 @@ table.dataTable {
 <script>
 $(document).ready(function () {
 
-    $('#tabela').DataTable({
+    var table = $('#tabela').DataTable({
 
         dom: 'Bfrtip',
 
@@ -124,7 +139,7 @@ $(document).ready(function () {
                 extend: 'csvHtml5',
                 text: 'Download CSV',
                 exportOptions: {
-                    columns: ':visible'   // 🔥 EXPORTA SOMENTE O QUE ESTÁ VISÍVEL
+                    columns: ':visible'
                 }
             },
             {
@@ -134,18 +149,42 @@ $(document).ready(function () {
                     columns: ':visible'
                 }
             }
-        ],
+        ]
+    });
 
-        language: {
-            search: "Pesquisar:",
-            lengthMenu: "Mostrar _MENU_ registros",
-            info: "Mostrando _START_ até _END_ de _TOTAL_ registros",
-            paginate: {
-                previous: "Anterior",
-                next: "Próximo"
-            }
+    // =========================
+    // 🔥 FILTRO DE ANO DINÂMICO
+    // =========================
+
+    var anos = [];
+
+    table.column(7).data().each(function (value) {
+        var ano = value.split('/')[2];
+        if (!anos.includes(ano)) {
+            anos.push(ano);
+        }
+    });
+
+    anos.sort();
+
+    anos.forEach(function (ano) {
+        $('#filtroAno').append(`<option value="${ano}">${ano}</option>`);
+    });
+
+    $.fn.dataTable.ext.search.push(function (settings, data) {
+
+        var anoSelecionado = $('#filtroAno').val();
+        var anoTabela = data[7].split('/')[2];
+
+        if (!anoSelecionado || anoSelecionado === anoTabela) {
+            return true;
         }
 
+        return false;
+    });
+
+    $('#filtroAno').on('change', function () {
+        table.draw();
     });
 
 });
