@@ -31,7 +31,6 @@
             letter-spacing: 1px;
         }
 
-        /* Container para agrupar o brasão e o texto à direita */
         .logo-container {
             display: flex;
             flex-direction: column;
@@ -45,9 +44,8 @@
         }
 
         .texto-camara {
-            font-size: 12px; /* Aumentei levemente para melhorar a leitura */
+            font-size: 12px;
             font-weight: bold;
-            /* text-transform: uppercase; (Removido) */
             letter-spacing: 0.5px;
         }
 
@@ -108,7 +106,7 @@
             margin-bottom: 20px;
         }
 
-        /* Ocultar o texto "Pesquisar:" mas manter a caixa de busca visível */
+        /* Ocultar o texto "Pesquisar:" */
         .dataTables_wrapper .dataTables_filter label {
             font-size: 0;
         }
@@ -119,7 +117,7 @@
             padding: 6px 10px;
         }
 
-        /* Realçar os ícones de ordenação (setas) */
+        /* Realçar os ícones de ordenação */
         table.dataTable thead th.sorting::before,
         table.dataTable thead th.sorting::after,
         table.dataTable thead th.sorting_asc::before,
@@ -129,7 +127,6 @@
             opacity: 0.4 !important;
         }
 
-        /* Seta ativa (Crescente ou Decrescente) */
         table.dataTable thead th.sorting_asc::before,
         table.dataTable thead th.sorting_desc::after {
             opacity: 1 !important;
@@ -214,6 +211,7 @@
         const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
         let tabela;
         let dadosGlobais = [];
+        let dadosFiltrados = []; // Nova variável para controlar o que está sendo exibido
 
         function getSheetUrl() {
             return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
@@ -251,7 +249,6 @@
             if (!valor) return "";
             let valorLimpo = valor.trim();
             if (valorLimpo === "0" || valorLimpo === "0,00" || valorLimpo === "R$ 0,00" || valorLimpo === "0.00") return "-";
-            
             valorLimpo = valorLimpo.replace(/R\$\s?/g, "").trim();
             if (!valorLimpo.includes(",")) {
                 valorLimpo += ",00";
@@ -307,6 +304,7 @@
                 const res = await fetch(getSheetUrl(), { cache: "no-store" });
                 const csv = await res.text();
                 dadosGlobais = csvParaArray(csv);
+                dadosFiltrados = [...dadosGlobais]; // Inicialmente os filtrados são todos
                 preencherFiltros();
                 render(dadosGlobais);
             } catch (erro) { console.error("Erro:", erro); }
@@ -316,41 +314,88 @@
             const serv = $('#filtroServidor').val();
             const mes = $('#filtroMes').val();
             const ano = $('#filtroAno').val();
-            let filtrado = dadosGlobais.filter(d => {
+            
+            dadosFiltrados = dadosGlobais.filter(d => {
                 const dt = extrairData(d["data da partida"]);
                 return (!serv || d.servidor === serv) && (!mes || dt.mes === mes) && (!ano || dt.ano === ano);
             });
-            render(filtrado);
+            
+            render(dadosFiltrados);
         }
 
         function limparFiltros() {
             $('#filtroServidor, #filtroMes, #filtroAno').val('');
+            dadosFiltrados = [...dadosGlobais];
             render(dadosGlobais);
         }
 
-        // --- Funções de Exportação ---
+        // --- Funções de Exportação Atualizadas ---
 
         function exportarCSV() {
-            if (!dadosGlobais.length) return;
-            const headers = Object.keys(dadosGlobais[0]);
+            const dadosParaExportar = tabela.rows({ filter: 'applied' }).data().toArray();
+            if (!dadosParaExportar.length) return;
+            
+            // Reconstruímos o CSV com base nos dados que estão na tela (filtrados)
+            const headers = ["Servidor", "Cargo", "N Diárias", "Valor Diárias", "Adiantamento", "Data Partida", "Data Retorno", "Destino", "Cidade", "Finalidade"];
             let csv = headers.join(",") + "\n";
-            dadosGlobais.forEach(item => {
-                const linha = headers.map(h => `"${(item[h] || "").replace(/"/g, '""')}"`);
-                csv += linha.join(",") + "\n";
+            
+            // Usamos os dados diretamente da tabela filtrada do DataTables
+            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
+                const row = this.node();
+                const colunas = $(row).find('td').map(function() {
+                    return `"${$(this).text().replace(/"/g, '""')}"`;
+                }).get();
+                csv += colunas.join(",") + "\n";
             });
-            baixarArquivo(csv, "diarias.csv", "text/csv");
+
+            baixarArquivo(csv, "diarias_filtradas.csv", "text/csv");
         }
 
         function exportarXLSX() {
-            if (!dadosGlobais.length) return;
-            const worksheet = XLSX.utils.json_to_sheet(dadosGlobais);
+            // Puxamos apenas o que o DataTables está mostrando após os filtros
+            const dadosDaTabela = [];
+            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
+                const row = this.node();
+                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
+                dadosDaTabela.push({
+                    "Servidor": colunas[0],
+                    "Cargo": colunas[1],
+                    "Nº Diárias": colunas[2],
+                    "Valor Diárias": colunas[3],
+                    "Adiantamento": colunas[4],
+                    "Data Partida": colunas[5],
+                    "Data Retorno": colunas[6],
+                    "Destino": colunas[7],
+                    "Cidade": colunas[8],
+                    "Finalidade": colunas[9]
+                });
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(dadosDaTabela);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias");
-            XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias Filtradas");
+            XLSX.writeFile(workbook, "relatorio_diarias_filtrado.xlsx");
         }
 
         function exportarJSON() {
-            baixarArquivo(JSON.stringify(dadosGlobais, null, 2), "diarias.json", "application/json");
+            const dadosDaTabela = [];
+            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
+                const row = this.node();
+                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
+                dadosDaTabela.push({
+                    servidor: colunas[0],
+                    cargo: colunas[1],
+                    num_diarias: colunas[2],
+                    valor_diarias: colunas[3],
+                    adiantamento: colunas[4],
+                    data_partida: colunas[5],
+                    data_retorno: colunas[6],
+                    destino: colunas[7],
+                    cidade: colunas[8],
+                    finalidade: colunas[9]
+                });
+            });
+            baixarArquivo(JSON.stringify(dadosDaTabela, null, 2), "diarias_filtradas.json", "application/json");
         }
 
         function baixarArquivo(content, name, type) {
