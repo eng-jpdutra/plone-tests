@@ -16,7 +16,7 @@
 
         /* Cabeçalho Ajustado */
         .topo {
-            background: #c1272d; /* Vermelho Marília */
+            background: #003b75; /* Azul original retornado */
             color: white;
             padding: 10px 30px;
             display: flex;
@@ -31,9 +31,24 @@
             letter-spacing: 1px;
         }
 
+        /* Container para agrupar o brasão e o texto à direita */
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
         .brasao {
-            height: 80px; /* Ajuste o tamanho conforme necessário */
+            height: 70px; /* Tamanho ajustado para caber o texto perfeitamente */
             width: auto;
+        }
+
+        .texto-camara {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Layout Principal */
@@ -67,7 +82,7 @@
         }
 
         button {
-            background: #c1272d; /* Vermelho */
+            background: #003b75; /* Azul original retornado */
             color: white;
             border: none;
             cursor: pointer;
@@ -75,12 +90,12 @@
         }
 
         button:hover {
-            background: #8e1b1f; /* Vermelho Escuro */
+            background: #002a52; /* Azul Escuro */
         }
 
-        /* Customização DataTables (Cabeçalho da Tabela Vermelho) */
+        /* Customização DataTables (Cabeçalho da Tabela Azul) */
         table.dataTable thead th {
-            background: #c1272d !important;
+            background: #003b75 !important;
             color: white !important;
             text-transform: uppercase;
             font-size: 12px;
@@ -93,7 +108,11 @@
 
     <header class="topo">
         <h2>RELATÓRIO DE DIÁRIAS</h2>
-        <img src="Brasão_de_Marília.png" alt="Brasão de Marília" class="brasao">
+        
+        <div class="logo-container">
+            <img src="Brasão_de_Marília.jpg" alt="Brasão de Marília" class="brasao">
+            <span class="texto-camara">Câmara Municipal de Marília</span>
+        </div>
     </header>
 
     <main class="container">
