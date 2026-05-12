@@ -225,8 +225,8 @@
                         <td>${d.servidor || ""}</td>
                         <td>${d["cargo ou função"] || ""}</td>
                         <td>${d["n de diárias"] || ""}</td>
-                        <td>${formatarMoeda(d["valor diarias"])}</td>
-                        <td>${formatarMoeda(d["valor adiantamento"])}</td>
+                        <td style="text-align: center;">${formatarMoeda(d["valor diarias"])}</td>
+                        <td style="text-align: center;">${formatarMoeda(d["valor adiantamento"])}</td>
                         <td data-sort="${ordemPartida}">${d["data da partida"] || ""}</td>
                         <td data-sort="${ordemRetorno}">${d["data do retorno"] || ""}</td>
                         <td>${d["local de destino"] || ""}</td>
