@@ -188,14 +188,27 @@
         function formatarMoeda(valor) {
             if (!valor) return ""; // Retorna vazio se não houver valor
             
-            const valorLimpo = valor.trim();
+            let valorLimpo = valor.trim();
             
-            // Se o valor for zero (0, 0,00 ou já vier com R$ 0,00), retorna apenas o traço
+            // Se o valor for zero, retorna apenas o traço
             if (valorLimpo === "0" || valorLimpo === "0,00" || valorLimpo === "R$ 0,00" || valorLimpo === "0.00") {
                 return "-";
             }
 
-            if (valorLimpo.includes("R$")) return valorLimpo; // Evita duplicar se já vier com R$ da planilha
+            // Limpa o R$ se ele já vier da planilha para podermos formatar corretamente
+            valorLimpo = valorLimpo.replace(/R\$\s?/g, "").trim();
+
+            // Se não possui vírgula, significa que é um número inteiro (ex: 150)
+            if (!valorLimpo.includes(",")) {
+                valorLimpo += ",00";
+            } else {
+                // Caso tenha vírgula, garante que tenha duas casas decimais (ex: "150,5" vira "150,50")
+                const casasDecimais = valorLimpo.split(",")[1];
+                if (casasDecimais && casasDecimais.length === 1) {
+                    valorLimpo += "0";
+                }
+            }
+
             return `R$ ${valorLimpo}`;
         }
 
@@ -225,8 +238,8 @@
                         <td>${d.servidor || ""}</td>
                         <td>${d["cargo ou função"] || ""}</td>
                         <td>${d["n de diárias"] || ""}</td>
-                        <td style="text-align: center;">${formatarMoeda(d["valor diarias"])}</td>
-                        <td style="text-align: center;">${formatarMoeda(d["valor adiantamento"])}</td>
+                        <td>${formatarMoeda(d["valor diarias"])}</td>
+                        <td>${formatarMoeda(d["valor adiantamento"])}</td>
                         <td data-sort="${ordemPartida}">${d["data da partida"] || ""}</td>
                         <td data-sort="${ordemRetorno}">${d["data do retorno"] || ""}</td>
                         <td>${d["local de destino"] || ""}</td>
