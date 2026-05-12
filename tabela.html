@@ -1,370 +1,80 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8" />
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Relatório de Diárias</title>
 
     <!-- DataTables -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
-    />
+    <link rel="stylesheet"
+        href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
-    <!-- Buttons -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"
-    />
-
-    <!-- ColReorder -->
-    <link
-        rel="stylesheet"
-        href="https://cdn.datatables.net/colreorder/1.6.2/css/colReorder.dataTables.min.css"
-    />
+    <link rel="stylesheet"
+        href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
 
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
             background: #f1f1f1;
         }
 
-        /* CABEÇALHO */
         .topo {
             background: #003b75;
             color: white;
             text-align: center;
-            padding: 14px 20px;
-            border-bottom: 4px solid #d4a100;
-            margin-bottom: 18px;
+            padding: 14px;
         }
 
-        .topo h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .topo h2 {
-            margin: 4px 0 0;
-            font-size: 18px;
-            font-weight: normal;
-        }
-
-        /* CONTAINER */
         .container {
             background: white;
-            padding: 15px;
-            border: 1px solid #cfcfcf;
+            padding: 10px;
             overflow-x: auto;
         }
 
-        /* DATATABLE */
-        .dataTables_wrapper {
-            overflow: hidden;
-        }
-
-        table.dataTable {
-            width: 100% !important;
-            margin-bottom: 0 !important;
-            border-collapse: collapse !important;
-            font-size: 12px;
-        }
-
-        /* CABEÇALHO TABELA */
         table.dataTable thead th {
             background: #003b75 !important;
             color: white !important;
-            border: 1px solid #2d4f73 !important;
-            text-align: center;
-            padding: 10px 6px !important;
-            font-weight: bold;
             text-transform: uppercase;
         }
 
-        /* CÉLULAS */
         table.dataTable tbody td {
-            border: 1px solid #d3d3d3 !important;
-            padding: 8px 6px !important;
-            vertical-align: top;
-            color: #000;
+            font-size: 12px;
         }
 
-        /* ZEBRADO */
-        table.dataTable tbody tr:nth-child(even) {
-            background: #f7f7f7;
-        }
-
-        table.dataTable tbody tr:nth-child(odd) {
-            background: #ffffff;
-        }
-
-        /* HOVER */
-        table.dataTable tbody tr:hover {
-            background: #e8f1fb !important;
-        }
-
-        /* CONTROLES */
-        .dataTables_wrapper .dataTables_filter input {
-            border: 1px solid #bbb;
-            padding: 4px;
-        }
-
-        .dataTables_wrapper .dataTables_length select {
-            border: 1px solid #bbb;
-            padding: 4px;
-        }
-
-        /* BOTÕES */
         .dt-button {
             background: #003b75 !important;
             color: white !important;
             border: none !important;
-            padding: 6px 12px !important;
-            border-radius: 3px !important;
-        }
-
-        .dt-button:hover {
-            background: #002a52 !important;
-        }
-
-        /* RODAPÉ */
-        .rodape {
-            text-align: right;
-            font-size: 11px;
-            color: #777;
-            margin-top: 10px;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- TOPO -->
     <div class="topo">
-        <h1>CÂMARA MUNICIPAL DE MARÍLIA</h1>
-        <h2>Relatório de Diárias e Adiantamentos - Janeiro/2026</h2>
+        <h2>Relatório de Diárias</h2>
     </div>
 
     <div class="container">
 
-        <table
-            id="tabela"
-            class="display nowrap"
-            style="width: 100%;"
-        >
-
+        <table id="tabela" class="display nowrap" style="width:100%">
             <thead>
                 <tr>
                     <th>Nome</th>
                     <th>Cargo</th>
-                    <th>Cidade</th>
-                    <th>Departamento</th>
-                    <th>Idade</th>
-                    <th>Salário</th>
-                    <th>Status</th>
-                    <th>Data Admissão</th>
-                    <th>Performance</th>
+                    <th>Nº Diárias</th>
+                    <th>Valor Recebido</th>
+                    <th>Data Partida</th>
+                    <th>Data Retorno</th>
+                    <th>Destino</th>
+                    <th>Motivação</th>
                 </tr>
             </thead>
-
-            <tbody>
-
-                <tr>
-                    <td>João Silva</td>
-                    <td>Designer</td>
-                    <td>São Paulo</td>
-                    <td>Marketing</td>
-                    <td>29</td>
-                    <td>R$ 5.200</td>
-                    <td>Ativo</td>
-                    <td>12/03/2021</td>
-                    <td>92%</td>
-                </tr>
-
-                <tr>
-                    <td>Maria Oliveira</td>
-                    <td>Dev</td>
-                    <td>Rio</td>
-                    <td>Tecnologia</td>
-                    <td>31</td>
-                    <td>R$ 8.400</td>
-                    <td>Ativo</td>
-                    <td>05/09/2020</td>
-                    <td>97%</td>
-                </tr>
-
-                <tr>
-                    <td>Carlos Souza</td>
-                    <td>Analista</td>
-                    <td>BH</td>
-                    <td>Financeiro</td>
-                    <td>35</td>
-                    <td>R$ 6.700</td>
-                    <td>Ativo</td>
-                    <td>17/01/2019</td>
-                    <td>88%</td>
-                </tr>
-
-                <tr>
-                    <td>Ana Costa</td>
-                    <td>RH</td>
-                    <td>Curitiba</td>
-                    <td>RH</td>
-                    <td>38</td>
-                    <td>R$ 9.100</td>
-                    <td>Ativo</td>
-                    <td>11/11/2018</td>
-                    <td>95%</td>
-                </tr>
-
-                <tr>
-                    <td>Fernanda Lima</td>
-                    <td>UX</td>
-                    <td>Florianópolis</td>
-                    <td>Produto</td>
-                    <td>27</td>
-                    <td>R$ 6.300</td>
-                    <td>Férias</td>
-                    <td>22/06/2022</td>
-                    <td>90%</td>
-                </tr>
-
-                <tr>
-                    <td>Ricardo Mendes</td>
-                    <td>Gerente</td>
-                    <td>Campinas</td>
-                    <td>Operações</td>
-                    <td>41</td>
-                    <td>R$ 12.500</td>
-                    <td>Ativo</td>
-                    <td>15/04/2017</td>
-                    <td>98%</td>
-                </tr>
-
-                <tr>
-                    <td>Patrícia Rocha</td>
-                    <td>Analista BI</td>
-                    <td>Brasília</td>
-                    <td>BI</td>
-                    <td>30</td>
-                    <td>R$ 7.800</td>
-                    <td>Ativo</td>
-                    <td>09/08/2021</td>
-                    <td>91%</td>
-                </tr>
-
-                <tr>
-                    <td>Eduardo Martins</td>
-                    <td>DevOps</td>
-                    <td>Porto Alegre</td>
-                    <td>Tecnologia</td>
-                    <td>33</td>
-                    <td>R$ 9.600</td>
-                    <td>Ativo</td>
-                    <td>14/02/2020</td>
-                    <td>94%</td>
-                </tr>
-
-                <tr>
-                    <td>Juliana Ferreira</td>
-                    <td>Assistente</td>
-                    <td>Recife</td>
-                    <td>Adm</td>
-                    <td>26</td>
-                    <td>R$ 3.900</td>
-                    <td>Ativo</td>
-                    <td>02/12/2023</td>
-                    <td>85%</td>
-                </tr>
-
-                <tr>
-                    <td>Lucas Almeida</td>
-                    <td>SEO</td>
-                    <td>Fortaleza</td>
-                    <td>Marketing</td>
-                    <td>32</td>
-                    <td>R$ 5.900</td>
-                    <td>Licença</td>
-                    <td>18/05/2022</td>
-                    <td>89%</td>
-                </tr>
-
-                <tr>
-                    <td>Bruno Martins</td>
-                    <td>Analista de Sistemas</td>
-                    <td>São Paulo</td>
-                    <td>Tecnologia</td>
-                    <td>28</td>
-                    <td>R$ 7.200</td>
-                    <td>Ativo</td>
-                    <td>10/02/2023</td>
-                    <td>93%</td>
-                </tr>
-
-                <tr>
-                    <td>Camila Ribeiro</td>
-                    <td>Marketing</td>
-                    <td>Rio de Janeiro</td>
-                    <td>Marketing</td>
-                    <td>27</td>
-                    <td>R$ 5.500</td>
-                    <td>Ativo</td>
-                    <td>21/07/2022</td>
-                    <td>88%</td>
-                </tr>
-
-                <tr>
-                    <td>Fernando Alves</td>
-                    <td>Dev Backend</td>
-                    <td>Curitiba</td>
-                    <td>Tecnologia</td>
-                    <td>34</td>
-                    <td>R$ 10.200</td>
-                    <td>Ativo</td>
-                    <td>03/03/2019</td>
-                    <td>96%</td>
-                </tr>
-
-                <tr>
-                    <td>Patrícia Gomes</td>
-                    <td>RH</td>
-                    <td>Brasília</td>
-                    <td>RH</td>
-                    <td>36</td>
-                    <td>R$ 8.900</td>
-                    <td>Ativo</td>
-                    <td>14/09/2018</td>
-                    <td>94%</td>
-                </tr>
-
-                <tr>
-                    <td>Rafael Santos</td>
-                    <td>Suporte Técnico</td>
-                    <td>Porto Alegre</td>
-                    <td>TI</td>
-                    <td>30</td>
-                    <td>R$ 4.800</td>
-                    <td>Ativo</td>
-                    <td>11/11/2021</td>
-                    <td>87%</td>
-                </tr>
-
-            </tbody>
-
+            <tbody></tbody>
         </table>
-
-        <!-- RODAPÉ -->
-        <div class="rodape">
-            Portal da Transparência - Dados extraídos conforme Resolução nº 380/2022.
-        </div>
 
     </div>
 
@@ -373,57 +83,98 @@
 
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-    <!-- Buttons -->
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
-
-    <!-- ColReorder -->
-    <script src="https://cdn.datatables.net/colreorder/1.6.2/js/dataTables.colReorder.min.js"></script>
-
     <script>
-        $(document).ready(function () {
+        // 📊 ID da planilha Google Sheets
+        const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
 
-            $('#tabela').DataTable({
+        // 🔄 URL com anti-cache (PRO)
+        function getSheetUrl() {
+            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${new Date().getTime()}`;
+        }
 
-                language: {
-                    search: "Pesquisa:"
-                },
+        let tabela;
 
-                dom: 'Bfrtip',
+        // 🧠 converte CSV em JSON
+        function csvParaArray(str) {
+            const linhas = str.trim().split("\n");
+            const cabecalho = linhas[0].split(",");
 
-                pageLength: 10,
+            return linhas.slice(1).map(linha => {
+                const valores = linha.split(",");
+                let obj = {};
 
-                scrollX: true,
-                scrollCollapse: true,
+                cabecalho.forEach((col, i) => {
+                    obj[col.trim()] = (valores[i] || "").trim();
+                });
 
-                colReorder: true,
+                return obj;
+            });
+        }
 
-                buttons: [
-                    {
-                        extend: 'colvis',
-                        text: 'Selecionar Colunas'
-                    },
-                    {
-                        extend: 'csvHtml5',
-                        text: 'Download CSV',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    },
-                    {
-                        extend: 'excelHtml5',
-                        text: 'Download Excel',
-                        exportOptions: {
-                            columns: ':visible'
-                        }
-                    }
-                ]
+        // 🚀 carrega dados da planilha
+        async function carregarDados() {
+
+            const res = await fetch(getSheetUrl(), {
+                cache: "no-store"
             });
 
-        });
+            const csv = await res.text();
+
+            const dados = csvParaArray(csv);
+
+            let linhas = "";
+
+            dados.forEach(item => {
+                linhas += `
+                    <tr>
+                        <td>${item.nome || ""}</td>
+                        <td>${item.cargo || ""}</td>
+                        <td>${item["n de diarias"] || ""}</td>
+                        <td>${item["valor recebido"] || ""}</td>
+                        <td>${item["data da partida"] || ""}</td>
+                        <td>${item["data do retorno"] || ""}</td>
+                        <td>${item.destino || ""}</td>
+                        <td>${item.motivacao || ""}</td>
+                    </tr>
+                `;
+            });
+
+            document.querySelector("#tabela tbody").innerHTML = linhas;
+
+            if (!tabela) {
+                tabela = $('#tabela').DataTable({
+                    dom: 'Bfrtip',
+                    pageLength: 10,
+                    scrollX: true,
+                    language: {
+                        search: "Pesquisa:"
+                    }
+                });
+            } else {
+                tabela.destroy();
+                tabela = $('#tabela').DataTable();
+            }
+
+            ajustarAlturaIframe();
+        }
+
+        // 📏 ajuste automático para iframe (Plone 4)
+        function ajustarAlturaIframe() {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    tipo: "ajustarAltura",
+                    altura: document.body.scrollHeight
+                }, "*");
+            }
+        }
+
+        window.addEventListener("load", carregarDados);
+
+        // 🔄 atualização periódica (opcional)
+        setInterval(carregarDados, 60000);
+
     </script>
 
 </body>
+
 </html>
