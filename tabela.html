@@ -7,27 +7,50 @@
 
     <title>Relatório de Diárias</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
     <link rel="stylesheet"
         href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
     <style>
         body {
-            font-family: Arial;
+            font-family: "Inter", Arial, sans-serif;
             margin: 0;
-            background: #f1f1f1;
+            background: #f4f6f9;
         }
 
         .topo {
             background: #003b75;
             color: white;
             text-align: center;
-            padding: 14px;
+            padding: 16px;
         }
 
         .container {
             background: white;
-            padding: 10px;
+            margin: 12px;
+            padding: 16px;
+            border-radius: 10px;
             overflow-x: auto;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .actions {
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 6px;
+            background: #003b75;
+            color: white;
+        }
+
+        button:hover {
+            background: #002a52;
         }
 
         table.dataTable thead th {
@@ -45,123 +68,172 @@
 
 <body>
 
-    <div class="topo">
-        <h2>Relatório de Diárias</h2>
+<div class="topo">
+    <h2>Relatório de Diárias</h2>
+</div>
+
+<div class="container">
+
+    <!-- EXPORTAÇÃO OPEN DATA -->
+    <div class="actions">
+        <button onclick="exportarCSV()">Exportar CSV</button>
+        <button onclick="exportarJSON()">Exportar JSON</button>
     </div>
 
-    <div class="container">
+    <table id="tabela" class="display nowrap" style="width:100%">
 
-        <table id="tabela" class="display nowrap" style="width:100%">
+        <thead>
+            <tr>
+                <th>Servidor</th>
+                <th>Cargo / Função</th>
+                <th>Nº Diárias</th>
+                <th>Valor Diárias</th>
+                <th>Valor Adiantamento</th>
+                <th>Data Partida</th>
+                <th>Data Retorno</th>
+                <th>Local Destino</th>
+                <th>Cidade</th>
+                <th>Finalidade</th>
+            </tr>
+        </thead>
 
-            <thead>
-                <tr>
-                    <th>Servidor</th>
-                    <th>Cargo / Função</th>
-                    <th>Nº Diárias</th>
-                    <th>Valor Diárias</th>
-                    <th>Valor Adiantamento</th>
-                    <th>Data Partida</th>
-                    <th>Data Retorno</th>
-                    <th>Local de Destino</th>
-                    <th>Cidade</th>
-                    <th>Finalidade</th>
-                </tr>
-            </thead>
+        <tbody></tbody>
 
-            <tbody></tbody>
+    </table>
 
-        </table>
+</div>
 
-    </div>
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-    <!-- JS -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+const SHEET_ID = "SEU_ID_AQUI";
 
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+function getSheetUrl() {
+    return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
+}
 
-    <script>
-        const SHEET_ID = "SEU_ID_AQUI";
+let tabela;
+let dadosGlobais = [];
 
-        function getSheetUrl() {
-            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${new Date().getTime()}`;
-        }
+// CSV -> JSON
+function csvParaArray(str) {
+    const linhas = str.trim().split("\n");
+    const cabecalho = linhas[0].split(",");
 
-        let tabela;
+    return linhas.slice(1).map(linha => {
+        const valores = linha.split(",");
+        let obj = {};
 
-        function csvParaArray(str) {
-            const linhas = str.trim().split("\n");
-            const cabecalho = linhas[0].split(",");
+        cabecalho.forEach((col, i) => {
+            obj[col.trim()] = (valores[i] || "").trim();
+        });
 
-            return linhas.slice(1).map(linha => {
-                const valores = linha.split(",");
-                let obj = {};
+        return obj;
+    });
+}
 
-                cabecalho.forEach((col, i) => {
-                    obj[col.trim()] = (valores[i] || "").trim();
-                });
+// carregar dados
+async function carregarDados() {
 
-                return obj;
-            });
-        }
+    const res = await fetch(getSheetUrl(), { cache: "no-store" });
+    const csv = await res.text();
 
-        async function carregarDados() {
+    dadosGlobais = csvParaArray(csv);
 
-            const res = await fetch(getSheetUrl(), { cache: "no-store" });
-            const csv = await res.text();
+    let linhas = "";
 
-            const dados = csvParaArray(csv);
+    dadosGlobais.forEach(item => {
+        linhas += `
+            <tr>
+                <td>${item.servidor || ""}</td>
+                <td>${item["cargo ou função"] || ""}</td>
+                <td>${item["n de diárias"] || ""}</td>
+                <td>${item["valor diarias"] || ""}</td>
+                <td>${item["valor adiantamento"] || ""}</td>
+                <td>${item["data da partida"] || ""}</td>
+                <td>${item["data do retorno"] || ""}</td>
+                <td>${item["local de destino"] || ""}</td>
+                <td>${item.cidade || ""}</td>
+                <td>${item.finalidade || ""}</td>
+            </tr>
+        `;
+    });
 
-            let linhas = "";
+    document.querySelector("#tabela tbody").innerHTML = linhas;
 
-            dados.forEach(item => {
-                linhas += `
-                    <tr>
-                        <td>${item.servidor || ""}</td>
-                        <td>${item["cargo ou função"] || ""}</td>
-                        <td>${item["n de diárias"] || ""}</td>
-                        <td>${item["valor diarias"] || ""}</td>
-                        <td>${item["valor adiantamento"] || ""}</td>
-                        <td>${item["data da partida"] || ""}</td>
-                        <td>${item["data do retorno"] || ""}</td>
-                        <td>${item["local de destino"] || ""}</td>
-                        <td>${item.cidade || ""}</td>
-                        <td>${item.finalidade || ""}</td>
-                    </tr>
-                `;
-            });
-
-            document.querySelector("#tabela tbody").innerHTML = linhas;
-
-            if (!tabela) {
-                tabela = $('#tabela').DataTable({
-                    dom: 'Bfrtip',
-                    pageLength: 10,
-                    scrollX: true,
-                    language: {
-                        search: "Pesquisa:"
-                    }
-                });
-            } else {
-                tabela.destroy();
-                tabela = $('#tabela').DataTable();
+    if (!tabela) {
+        tabela = $('#tabela').DataTable({
+            pageLength: 10,
+            scrollX: true,
+            order: [[5, "desc"]],
+            language: {
+                search: "Pesquisa:"
             }
+        });
+    } else {
+        tabela.clear().destroy();
+        tabela = $('#tabela').DataTable();
+    }
 
-            ajustarAlturaIframe();
-        }
+    ajustarIframe();
+}
 
-        function ajustarAlturaIframe() {
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    tipo: "ajustarAltura",
-                    altura: document.body.scrollHeight
-                }, "*");
-            }
-        }
+// 📤 EXPORTAR CSV
+function exportarCSV() {
 
-        window.addEventListener("load", carregarDados);
-        setInterval(carregarDados, 60000);
-    </script>
+    const headers = Object.keys(dadosGlobais[0] || {});
+
+    let csv = headers.join(",") + "\n";
+
+    dadosGlobais.forEach(item => {
+        const linha = headers.map(h => `"${(item[h] || "").replace(/"/g, '""')}"`);
+        csv += linha.join(",") + "\n";
+    });
+
+    baixarArquivo(csv, "diarias.csv", "text/csv");
+}
+
+// 📦 EXPORTAR JSON
+function exportarJSON() {
+
+    const json = JSON.stringify(dadosGlobais, null, 2);
+
+    baixarArquivo(json, "diarias.json", "application/json");
+}
+
+// ⬇️ download genérico
+function baixarArquivo(conteudo, nome, tipo) {
+
+    const blob = new Blob([conteudo], { type: tipo });
+
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = nome;
+
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+}
+
+// iframe resize
+function ajustarIframe() {
+    if (window.parent !== window) {
+        window.parent.postMessage({
+            tipo: "ajustarAltura",
+            altura: document.body.scrollHeight
+        }, "*");
+    }
+}
+
+window.onload = carregarDados;
+</script>
 
 </body>
-
 </html>
