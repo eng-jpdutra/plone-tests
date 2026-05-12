@@ -6,6 +6,8 @@
     <title>Relatório de Diárias</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
@@ -15,7 +17,7 @@
             background: #f4f6f9;
         }
 
-        /* Cabeçalho Ajustado */
+        /* --- CABEÇALHO --- */
         .topo {
             background: #003b75;
             color: white;
@@ -25,7 +27,8 @@
             align-items: center;
         }
 
-        .topo h2 {
+        /* Alterado de .topo h2 para .topo h1 */
+        .topo h1 {
             margin: 0;
             font-size: 1.5rem;
             letter-spacing: 1px;
@@ -38,39 +41,45 @@
             gap: 4px;
         }
 
-        .brasao {
-            height: 70px;
-            width: auto;
-        }
+        .brasao { height: 70px; width: auto; }
+        .texto-camara { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
 
-        .texto-camara {
-            font-size: 12px;
+        /* --- CARREGAMENTO (LOADING) --- */
+        #loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            font-size: 16px;
+            color: #003b75;
             font-weight: bold;
-            letter-spacing: 0.5px;
         }
 
-        /* Layout Principal */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #003b75;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- LAYOUT PRINCIPAL --- */
         .container {
             background: white;
             margin: 12px;
             padding: 12px;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none; /* Escondido até carregar os dados */
         }
 
-        /* Controles e Filtros */
-        .toolbar {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .toolbar-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+        .toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+        .toolbar-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
         select, button {
             padding: 8px 12px;
@@ -85,13 +94,17 @@
             border: none;
             cursor: pointer;
             transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
-        button:hover {
-            background: #002a52;
-        }
+        button:hover { background: #002a52; }
+        
+        .btn-acao { background: #17a2b8; }
+        .btn-acao:hover { background: #138496; }
 
-        /* Customização DataTables */
+        /* --- TABELA DATATABLES --- */
         table.dataTable thead th {
             background: #003b75 !important;
             color: white !important;
@@ -99,40 +112,40 @@
             font-size: 12px;
             padding: 12px;
         }
-
-        /* Espaçamento entre o "Pesquisar" e a Tabela */
-        .dataTables_wrapper .dataTables_filter,
-        .dataTables_wrapper .dataTables_length {
-            margin-bottom: 20px;
-        }
-
-        /* Ocultar o texto "Pesquisar:" */
-        .dataTables_wrapper .dataTables_filter label {
-            font-size: 0;
-        }
         
-        .dataTables_wrapper .dataTables_filter input {
+        table.dataTable tfoot th {
+            background: #f4f6f9 !important;
+            color: #003b75 !important;
             font-size: 14px;
-            margin-left: 0;
-            padding: 6px 10px;
+            font-weight: bold;
+            padding: 12px;
+            border-top: 2px solid #003b75;
         }
 
-        /* Realçar os ícones de ordenação */
-        table.dataTable thead th.sorting::before,
-        table.dataTable thead th.sorting::after,
-        table.dataTable thead th.sorting_asc::before,
-        table.dataTable thead th.sorting_asc::after,
-        table.dataTable thead th.sorting_desc::before,
-        table.dataTable thead th.sorting_desc::after {
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_length { margin-bottom: 20px; }
+        .dataTables_wrapper .dataTables_filter label { font-size: 0; }
+        .dataTables_wrapper .dataTables_filter input { font-size: 14px; margin-left: 0; padding: 6px 10px; }
+
+        table.dataTable thead th.sorting::before, table.dataTable thead th.sorting::after,
+        table.dataTable thead th.sorting_asc::before, table.dataTable thead th.sorting_asc::after,
+        table.dataTable thead th.sorting_desc::before, table.dataTable thead th.sorting_desc::after {
             opacity: 0.4 !important;
         }
 
-        table.dataTable thead th.sorting_asc::before,
-        table.dataTable thead th.sorting_desc::after {
-            opacity: 1 !important;
-            color: #ffdd00 !important;
-            text-shadow: 0 0 5px rgba(255, 221, 0, 0.5);
-            font-size: 1.2em !important;
+        table.dataTable thead th.sorting_asc::before, table.dataTable thead th.sorting_desc::after {
+            opacity: 1 !important; color: #ffdd00 !important; text-shadow: 0 0 5px rgba(255, 221, 0, 0.5); font-size: 1.2em !important;
+        }
+
+        /* --- MODO IMPRESSÃO --- */
+        @media print {
+            body { background: white; margin: 0; padding: 0; }
+            .topo, .toolbar, .dataTables_filter, .dataTables_length, .dataTables_info, .dataTables_paginate { display: none !important; }
+            .container { box-shadow: none; margin: 0; padding: 0; width: 100%; }
+            table.dataTable { border-collapse: collapse !important; width: 100% !important; }
+            table.dataTable th, table.dataTable td { border: 1px solid #ddd !important; font-size: 10px !important; padding: 6px !important; }
+            /* Evita quebras de linha no meio da tabela */
+            tr { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -141,47 +154,40 @@
 
     <header class="topo">
         <h1>Relatório de Diárias</h1>
-        
         <div class="logo-container">
             <img src="Brasão_de_Marília.png" alt="Brasão de Marília" class="brasao">
             <span class="texto-camara">Câmara Municipal de Marília</span>
         </div>
     </header>
 
-    <main class="container">
+    <div id="loader">
+        <div class="spinner"></div>
+        <span>Buscando dados na planilha...</span>
+    </div>
+
+    <main class="container" id="main-container">
         <div class="toolbar">
             <div class="toolbar-row">
-                <select id="filtroServidor">
-                    <option value="">Servidor</option>
-                </select>
-
+                <select id="filtroServidor"><option value="">Servidor</option></select>
                 <select id="filtroMes">
                     <option value="">Mês</option>
-                    <option value="01">Janeiro</option>
-                    <option value="02">Fevereiro</option>
-                    <option value="03">Março</option>
-                    <option value="04">Abril</option>
-                    <option value="05">Maio</option>
-                    <option value="06">Junho</option>
-                    <option value="07">Julho</option>
-                    <option value="08">Agosto</option>
-                    <option value="09">Setembro</option>
-                    <option value="10">Outubro</option>
-                    <option value="11">Novembro</option>
-                    <option value="12">Dezembro</option>
+                    <option value="01">Janeiro</option> <option value="02">Fevereiro</option>
+                    <option value="03">Março</option> <option value="04">Abril</option>
+                    <option value="05">Maio</option> <option value="06">Junho</option>
+                    <option value="07">Julho</option> <option value="08">Agosto</option>
+                    <option value="09">Setembro</option> <option value="10">Outubro</option>
+                    <option value="11">Novembro</option> <option value="12">Dezembro</option>
                 </select>
-
-                <select id="filtroAno">
-                    <option value="">Ano</option>
-                </select>
-
+                <select id="filtroAno"><option value="">Ano</option></select>
                 <button onclick="limparFiltros()">Limpar filtros</button>
             </div>
 
             <div class="toolbar-row">
-                <button onclick="exportarCSV()">Download CSV</button>
-                <button onclick="exportarXLSX()">Download XLSX</button>
-                <button onclick="exportarJSON()">Download JSON</button>
+                <button onclick="exportarCSV()">⬇️ CSV</button>
+                <button onclick="exportarXLSX()">⬇️ Excel</button>
+                <button onclick="exportarJSON()">⬇️ JSON</button>
+                <button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button>
+                <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar Dados</button>
             </div>
         </div>
 
@@ -201,33 +207,37 @@
                 </tr>
             </thead>
             <tbody></tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="3" style="text-align: right;">TOTAL FILTRADO:</th>
+                    <th>R$ 0,00</th>
+                    <th>R$ 0,00</th>
+                    <th colspan="5"></th>
+                </tr>
+            </tfoot>
         </table>
     </main>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <script>
         const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
         let tabela;
         let dadosGlobais = [];
-        let dadosFiltrados = []; // Nova variável para controlar o que está sendo exibido
+        let dadosFiltrados = [];
 
-        function getSheetUrl() {
-            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
-        }
+        function getSheetUrl() { return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`; }
 
         function csvParaArray(str) {
             const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
             const linhas = str.trim().split("\n");
             const cabecalho = linhas[0].split(regex).map(c => c.replace(/^"|"$/g, '').trim().toLowerCase());
-
             return linhas.slice(1).map(linha => {
                 const valores = linha.split(regex);
                 let obj = {};
-                cabecalho.forEach((coluna, i) => {
-                    obj[coluna] = (valores[i] || "").replace(/^"|"$/g, '').trim();
-                });
+                cabecalho.forEach((coluna, i) => { obj[coluna] = (valores[i] || "").replace(/^"|"$/g, '').trim(); });
                 return obj;
             });
         }
@@ -249,6 +259,7 @@
             if (!valor) return "";
             let valorLimpo = valor.trim();
             if (valorLimpo === "0" || valorLimpo === "0,00" || valorLimpo === "R$ 0,00" || valorLimpo === "0.00") return "-";
+            
             valorLimpo = valorLimpo.replace(/R\$\s?/g, "").trim();
             if (!valorLimpo.includes(",")) {
                 valorLimpo += ",00";
@@ -260,10 +271,20 @@
         }
 
         function preencherFiltros() {
+            const valServidor = $('#filtroServidor').val();
+            const valAno = $('#filtroAno').val();
+
+            $('#filtroServidor').html('<option value="">Servidor</option>');
+            $('#filtroAno').html('<option value="">Ano</option>');
+
             const servidores = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
             const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].sort();
+            
             servidores.forEach(s => { if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); });
             anos.forEach(a => { if (a) $('#filtroAno').append(`<option value="${a}">${a}</option>`); });
+
+            $('#filtroServidor').val(valServidor);
+            $('#filtroAno').val(valAno);
         }
 
         function render(dados) {
@@ -291,23 +312,57 @@
             
             tabela = $('#tabela').DataTable({
                 pageLength: 10,
-                scrollX: true,
+                responsive: true,
                 language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 initComplete: function() {
                     $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...');
+                },
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+
+                    let intVal = function (i) {
+                        if (typeof i === 'string') {
+                            if (i === "-") return 0;
+                            return parseFloat(i.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.'));
+                        }
+                        return typeof i === 'number' ? i : 0;
+                    };
+
+                    let totalDiarias = api.column(3, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
+                    let totalAdiantamento = api.column(4, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
+
+                    let formatador = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                    $(api.column(3).footer()).html(formatador.format(totalDiarias));
+                    $(api.column(4).footer()).html(formatador.format(totalAdiantamento));
                 }
             });
         }
 
-        async function carregar() {
+        async function iniciarCarregamento() {
+            $('#loader').show();
+            $('#main-container').hide();
+            
             try {
                 const res = await fetch(getSheetUrl(), { cache: "no-store" });
                 const csv = await res.text();
                 dadosGlobais = csvParaArray(csv);
-                dadosFiltrados = [...dadosGlobais]; // Inicialmente os filtrados são todos
                 preencherFiltros();
-                render(dadosGlobais);
-            } catch (erro) { console.error("Erro:", erro); }
+                
+                if (!$('#filtroMes').val() && !$('#filtroAno').val()) {
+                    const hoje = new Date();
+                    $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
+                    $('#filtroAno').val(String(hoje.getFullYear()));
+                }
+
+                aplicarFiltros(); 
+            } catch (erro) { 
+                console.error("Erro:", erro); 
+                alert("Falha ao carregar a planilha. Tente novamente.");
+            } finally {
+                $('#loader').hide();
+                $('#main-container').fadeIn(); 
+            }
         }
 
         function aplicarFiltros() {
@@ -329,52 +384,37 @@
             render(dadosGlobais);
         }
 
-        // --- Funções de Exportação Atualizadas ---
-
         function exportarCSV() {
             const dadosParaExportar = tabela.rows({ filter: 'applied' }).data().toArray();
             if (!dadosParaExportar.length) return;
             
-            // Reconstruímos o CSV com base nos dados que estão na tela (filtrados)
             const headers = ["Servidor", "Cargo", "N Diárias", "Valor Diárias", "Adiantamento", "Data Partida", "Data Retorno", "Destino", "Cidade", "Finalidade"];
             let csv = headers.join(",") + "\n";
             
-            // Usamos os dados diretamente da tabela filtrada do DataTables
             $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
                 const row = this.node();
-                const colunas = $(row).find('td').map(function() {
-                    return `"${$(this).text().replace(/"/g, '""')}"`;
-                }).get();
+                const colunas = $(row).find('td').map(function() { return `"${$(this).text().replace(/"/g, '""')}"`; }).get();
                 csv += colunas.join(",") + "\n";
             });
-
             baixarArquivo(csv, "diarias_filtradas.csv", "text/csv");
         }
 
         function exportarXLSX() {
-            // Puxamos apenas o que o DataTables está mostrando após os filtros
             const dadosDaTabela = [];
             $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
                 const row = this.node();
                 const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
                 dadosDaTabela.push({
-                    "Servidor": colunas[0],
-                    "Cargo": colunas[1],
-                    "Nº Diárias": colunas[2],
-                    "Valor Diárias": colunas[3],
-                    "Adiantamento": colunas[4],
-                    "Data Partida": colunas[5],
-                    "Data Retorno": colunas[6],
-                    "Destino": colunas[7],
-                    "Cidade": colunas[8],
-                    "Finalidade": colunas[9]
+                    "Servidor": colunas[0], "Cargo": colunas[1], "Nº Diárias": colunas[2], "Valor Diárias": colunas[3],
+                    "Adiantamento": colunas[4], "Data Partida": colunas[5], "Data Retorno": colunas[6],
+                    "Destino": colunas[7], "Cidade": colunas[8], "Finalidade": colunas[9]
                 });
             });
 
             const worksheet = XLSX.utils.json_to_sheet(dadosDaTabela);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias Filtradas");
-            XLSX.writeFile(workbook, "relatorio_diarias_filtrado.xlsx");
+            XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
         }
 
         function exportarJSON() {
@@ -383,16 +423,9 @@
                 const row = this.node();
                 const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
                 dadosDaTabela.push({
-                    servidor: colunas[0],
-                    cargo: colunas[1],
-                    num_diarias: colunas[2],
-                    valor_diarias: colunas[3],
-                    adiantamento: colunas[4],
-                    data_partida: colunas[5],
-                    data_retorno: colunas[6],
-                    destino: colunas[7],
-                    cidade: colunas[8],
-                    finalidade: colunas[9]
+                    servidor: colunas[0], cargo: colunas[1], num_diarias: colunas[2], valor_diarias: colunas[3],
+                    adiantamento: colunas[4], data_partida: colunas[5], data_retorno: colunas[6],
+                    destino: colunas[7], cidade: colunas[8], finalidade: colunas[9]
                 });
             });
             baixarArquivo(JSON.stringify(dadosDaTabela, null, 2), "diarias_filtradas.json", "application/json");
@@ -408,12 +441,8 @@
 
         $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
 
-        window.onload = async function () {
-            await carregar();
-            const hoje = new Date();
-            $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
-            $('#filtroAno').val(String(hoje.getFullYear()));
-            aplicarFiltros();
+        window.onload = function () {
+            iniciarCarregamento();
         };
     </script>
 </body>
