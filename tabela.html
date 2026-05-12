@@ -7,16 +7,12 @@
 
     <title>Relatório de Diárias</title>
 
-    <!-- DataTables -->
     <link rel="stylesheet"
         href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
-    <link rel="stylesheet"
-        href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
-
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial;
             margin: 0;
             background: #f1f1f1;
         }
@@ -38,16 +34,11 @@
             background: #003b75 !important;
             color: white !important;
             text-transform: uppercase;
+            font-size: 12px;
         }
 
         table.dataTable tbody td {
             font-size: 12px;
-        }
-
-        .dt-button {
-            background: #003b75 !important;
-            color: white !important;
-            border: none !important;
         }
     </style>
 </head>
@@ -61,19 +52,24 @@
     <div class="container">
 
         <table id="tabela" class="display nowrap" style="width:100%">
+
             <thead>
                 <tr>
-                    <th>Nome</th>
-                    <th>Cargo</th>
+                    <th>Servidor</th>
+                    <th>Cargo / Função</th>
                     <th>Nº Diárias</th>
-                    <th>Valor Recebido</th>
+                    <th>Valor Diárias</th>
+                    <th>Valor Adiantamento</th>
                     <th>Data Partida</th>
                     <th>Data Retorno</th>
-                    <th>Destino</th>
-                    <th>Motivação</th>
+                    <th>Local de Destino</th>
+                    <th>Cidade</th>
+                    <th>Finalidade</th>
                 </tr>
             </thead>
+
             <tbody></tbody>
+
         </table>
 
     </div>
@@ -84,17 +80,14 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
-        // 📊 ID da planilha Google Sheets
-        const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
+        const SHEET_ID = "SEU_ID_AQUI";
 
-        // 🔄 URL com anti-cache (PRO)
         function getSheetUrl() {
             return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${new Date().getTime()}`;
         }
 
         let tabela;
 
-        // 🧠 converte CSV em JSON
         function csvParaArray(str) {
             const linhas = str.trim().split("\n");
             const cabecalho = linhas[0].split(",");
@@ -111,13 +104,9 @@
             });
         }
 
-        // 🚀 carrega dados da planilha
         async function carregarDados() {
 
-            const res = await fetch(getSheetUrl(), {
-                cache: "no-store"
-            });
-
+            const res = await fetch(getSheetUrl(), { cache: "no-store" });
             const csv = await res.text();
 
             const dados = csvParaArray(csv);
@@ -127,14 +116,16 @@
             dados.forEach(item => {
                 linhas += `
                     <tr>
-                        <td>${item.nome || ""}</td>
-                        <td>${item.cargo || ""}</td>
-                        <td>${item["n de diarias"] || ""}</td>
-                        <td>${item["valor recebido"] || ""}</td>
+                        <td>${item.servidor || ""}</td>
+                        <td>${item["cargo ou função"] || ""}</td>
+                        <td>${item["n de diárias"] || ""}</td>
+                        <td>${item["valor diarias"] || ""}</td>
+                        <td>${item["valor adiantamento"] || ""}</td>
                         <td>${item["data da partida"] || ""}</td>
                         <td>${item["data do retorno"] || ""}</td>
-                        <td>${item.destino || ""}</td>
-                        <td>${item.motivacao || ""}</td>
+                        <td>${item["local de destino"] || ""}</td>
+                        <td>${item.cidade || ""}</td>
+                        <td>${item.finalidade || ""}</td>
                     </tr>
                 `;
             });
@@ -158,7 +149,6 @@
             ajustarAlturaIframe();
         }
 
-        // 📏 ajuste automático para iframe (Plone 4)
         function ajustarAlturaIframe() {
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({
@@ -169,10 +159,7 @@
         }
 
         window.addEventListener("load", carregarDados);
-
-        // 🔄 atualização periódica (opcional)
         setInterval(carregarDados, 60000);
-
     </script>
 
 </body>
