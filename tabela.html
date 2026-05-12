@@ -187,8 +187,16 @@
 
         function formatarMoeda(valor) {
             if (!valor) return ""; // Retorna vazio se não houver valor
-            if (valor.includes("R$")) return valor; // Evita duplicar se já vier com R$ da planilha
-            return `R$ ${valor}`;
+            
+            const valorLimpo = valor.trim();
+            
+            // Se o valor for zero (0, 0,00 ou já vier com R$ 0,00), retorna apenas o traço
+            if (valorLimpo === "0" || valorLimpo === "0,00" || valorLimpo === "R$ 0,00" || valorLimpo === "0.00") {
+                return "-";
+            }
+
+            if (valorLimpo.includes("R$")) return valorLimpo; // Evita duplicar se já vier com R$ da planilha
+            return `R$ ${valorLimpo}`;
         }
 
         // --- Interface ---
