@@ -39,9 +39,9 @@
         table.dataTable thead th { background: #003b75 !important; color: white !important; text-transform: uppercase; font-size: 12px; padding: 12px; }
         table.dataTable tfoot th { background: #f4f6f9 !important; color: #003b75 !important; font-size: 14px; font-weight: bold; padding: 12px; border-top: 2px solid #003b75; }
         
-        /* Ajuste de espaçamento para não colar na tabela */
+        /* Ajuste de espaçamento para o campo de busca (conforme sua imagem) */
         .dataTables_wrapper .dataTables_filter, 
-        .dataTables_wrapper .dataTables_length { margin-bottom: 25px; padding-top: 10px; }
+        .dataTables_wrapper .dataTables_length { margin-bottom: 30px; padding-top: 10px; }
         
         .dataTables_wrapper .dataTables_filter label { font-size: 0; }
         .dataTables_wrapper .dataTables_filter input { font-size: 14px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; }
@@ -129,7 +129,7 @@
         let dadosGlobais = [];
         let listaGabinetes = [];
 
-        // FUNÇÃO QUE CORRIGE O ERRO (Definida no topo para segurança)
+        // FUNÇÃO DE DATA (Corrigindo o erro de "not defined")
         function extrairData(dataStr) {
             if (!dataStr || typeof dataStr !== 'string') return { mes: "", ano: "" };
             const partes = dataStr.split("/");
@@ -222,4 +222,158 @@
                 html += `<tr>
                     <td>${d.servidor || ""}</td>
                     <td>${d["cargo ou função"] || ""}</td>
-                    <td>${d["n de diárias"]
+                    <td>${d["n de diárias"] || ""}</td>
+                    <td>${formatarMoeda(d["valor diarias"])}</td>
+                    <td>${formatarMoeda(d["valor adiantamento"])}</td>
+                    <td data-sort="${sortP}">${d["data da partida"] || ""}</td>
+                    <td data-sort="${sortR}">${d["data do retorno"] || ""}</td>
+                    <td>${d["local de destino"] || ""}</td>
+                    <td>${d.cidade || ""}</td>
+                    <td>${d.finalidade || ""}</td>
+                </tr>`;
+            });
+
+            if (tabela) tabela.destroy();
+            $('#tabela tbody').html(html);
+
+            tabela = $('#tabela').DataTable({
+                pageLength: 10, 
+                responsive: true, 
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                initComplete: function() { $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...'); },
+                
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+                    let intVal = i => typeof i === 'string' ? parseFloat(i.replace(/R\$\s?|[.]/g, '').replace(',', '.')) || 0 : typeof i === 'number' ? i : 0;
+                    
+                    let totalD = api.column(3, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
+                    let totalA = api.column(4, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
+                    
+                    let f = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+                    $(api.column(3).footer()).html(f.format(totalD));
+                    $(api.column(4).footer()).html(f.format(totalA));
+                }
+            });
+        }
+
+        function aplicarFiltros() {
+            const serv = $('#filtroServidor').val();
+            const mes = $('#filtroMes').val();
+            const ano = $('#filtroAno').val();
+            const gab = $('#filtroGabinete').val();
+
+            const resultado = dadosGlobais.filter(d => {
+                const dt = extrairData(d["data da partida"]);
+                const matchServ = !serv || d.servidor === serv;
+                const matchMes = !mes || dt.mes === mes;
+                const matchAno = !ano || dt.ano === ano;
+                
+                let matchGab = true;
+                if (gab) {
+                    const g = removerAcentos(gab).toLowerCase();
+                    const n = removerAcentos(d.servidor).toLowerCase();
+                    const c = removerAcentos(d["cargo ou função"]).toLowerCase();
+                    matchGab = n.includes(g) || c.includes(g);
+                }
+                
+                return matchServ && matchMes && matchAno && matchGab;
+            });
+            render(resultado);
+        }
+
+        function limparFiltros() { 
+            $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').val(''); 
+            aplicarFiltros(); 
+        }
+
+        async function iniciarCarregamento() {
+            $('#loader').show(); $('#main-container').hide();
+            
+            try {
+                const [resD, resG] = await Promise.all([
+                    fetch(getCsvUrl(SHEET_ID_DIARIAS), { cache: "no-store" }),
+                    fetch(getCsvUrl(SHEET_ID_GABINETES), { cache: "no-store" })
+                ]);
+                const txtD = await resD.text();
+                const txtG = await resG.text();
+
+                if(txtD.includes("<html") || txtG.includes("<html")) throw new Error("Acesso negado às planilhas.");
+
+                dadosGlobais = csvParaArray(txtD);
+                listaGabinetes = csvParaArray(txtG);
+
+                preencherFiltros();
+                
+                if (!$('#filtroMes').val() && !$('#filtroAno').val()) {
+                    const hoje = new Date();
+                    $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
+                    $('#filtroAno').val(String(hoje.getFullYear()));
+                }
+
+                aplicarFiltros();
+                
+                $('#loader').hide(); $('#main-container').fadeIn();
+            } catch (e) {
+                $('#loader').html(`
+                    <div style="text-align: center; color: #c1272d; background: #ffebeb; padding: 20px; border-radius: 8px; border: 1px solid #c1272d;">
+                        <h3 style="margin: 0 0 10px 0;">⚠️ Erro de Comunicação</h3>
+                        <p style="margin: 0 0 15px 0; font-size: 14px;">${e.message}</p>
+                        <button onclick="location.reload()" style="padding: 10px 15px; background: #003b75; color: white; border: none; border-radius: 5px; cursor: pointer;">Tentar Novamente</button>
+                    </div>
+                `);
+            }
+        }
+
+        function obterDadosFiltradosDoDOM() {
+            const dadosDaTabela = [];
+            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
+                const row = this.node();
+                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
+                dadosDaTabela.push({
+                    "Servidor": colunas[0], "Cargo": colunas[1], "Nº Diárias": colunas[2], "Valor Diárias": colunas[3],
+                    "Adiantamento": colunas[4], "Data Partida": colunas[5], "Data Retorno": colunas[6],
+                    "Destino": colunas[7], "Cidade": colunas[8], "Finalidade": colunas[9]
+                });
+            });
+            return dadosDaTabela;
+        }
+
+        function exportarCSV() {
+            const dados = obterDadosFiltradosDoDOM();
+            if (!dados.length) return;
+            const headers = Object.keys(dados[0]);
+            let csv = headers.join(",") + "\n";
+            dados.forEach(row => {
+                csv += headers.map(h => `"${row[h].replace(/"/g, '""')}"`).join(",") + "\n";
+            });
+            baixarArquivo(csv, "diarias_filtradas.csv", "text/csv");
+        }
+
+        function exportarXLSX() {
+            const dados = obterDadosFiltradosDoDOM();
+            if (!dados.length) return;
+            const worksheet = XLSX.utils.json_to_sheet(dados);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias Filtradas");
+            XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
+        }
+
+        function exportarJSON() {
+            const dados = obterDadosFiltradosDoDOM();
+            if (!dados.length) return;
+            baixarArquivo(JSON.stringify(dados, null, 2), "diarias_filtradas.json", "application/json");
+        }
+
+        function baixarArquivo(content, name, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = name; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').on('change', aplicarFiltros);
+        window.onload = iniciarCarregamento;
+    </script>
+</body>
+</html>
