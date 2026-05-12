@@ -13,19 +13,16 @@
     <style>
         body { font-family: 'Inter', Arial, sans-serif; margin: 0; background: #f4f6f9; }
         
-        /* Cabeçalho */
         .topo { background: #003b75; color: white; padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; }
         .topo h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
         .logo-container { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .brasao { height: 70px; width: auto; }
         .texto-camara { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
 
-        /* Loader */
         #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; font-size: 16px; color: #003b75; font-weight: bold; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #003b75; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Layout */
         .container { background: white; margin: 12px; padding: 12px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: none; }
         .toolbar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
         .toolbar-row { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -35,15 +32,13 @@
         .btn-acao { background: #17a2b8; }
         .btn-acao:hover { background: #138496; }
 
-        /* Tabela DataTables */
         table.dataTable thead th { background: #003b75 !important; color: white !important; text-transform: uppercase; font-size: 12px; padding: 12px; }
         table.dataTable tfoot th { background: #f4f6f9 !important; color: #003b75 !important; font-size: 14px; font-weight: bold; padding: 12px; border-top: 2px solid #003b75; }
         .dataTables_wrapper .dataTables_filter label { font-size: 0; }
         .dataTables_wrapper .dataTables_filter input { font-size: 14px; padding: 6px 10px; }
         
-        /* Modo Impressão Limpa */
         @media print {
-            .topo, .toolbar, .dataTables_filter, .dataTables_length, .dataTables_info, .dataTables_paginate { display: none !important; }
+            .topo, .toolbar, .dataTables_filter, .dataTables_filter input, .dataTables_length, .dataTables_info, .dataTables_paginate { display: none !important; }
             .container { box-shadow: none; width: 100%; margin: 0; padding: 0; }
             table.dataTable th, table.dataTable td { font-size: 10px !important; border: 1px solid #ddd !important; }
             table.dataTable { border-collapse: collapse !important; width: 100% !important; }
@@ -69,8 +64,8 @@
     <main class="container" id="main-container">
         <div class="toolbar">
             <div class="toolbar-row">
-                <select id="filtroGabinete" title="Filtrar por Gabinete (Vereador + Assessoria)"><option value="">Gabinete</option></select>
-                <select id="filtroServidor" title="Filtrar apenas por um servidor específico"><option value="">Servidor</option></select>
+                <select id="filtroGabinete" title="Escolha o Vereador Ativo"><option value="">Gabinete</option></select>
+                <select id="filtroServidor"><option value="">Servidor</option></select>
                 <select id="filtroMes">
                     <option value="">Mês</option>
                     <option value="01">Janeiro</option><option value="02">Fevereiro</option>
@@ -87,7 +82,6 @@
             <div class="toolbar-row">
                 <button onclick="exportarCSV()">⬇️ CSV</button>
                 <button onclick="exportarXLSX()">⬇️ Excel</button>
-                <button onclick="exportarJSON()">⬇️ JSON</button>
                 <button class="btn-acao" onclick="window.print()">🖨️ Imprimir</button>
                 <button class="btn-acao" onclick="iniciarCarregamento()">🔄 Atualizar</button>
             </div>
@@ -116,11 +110,9 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
     <script>
-        // ==========================================
-        // CONFIGURAÇÕES DAS PLANILHAS DO GOOGLE
-        // ==========================================
+        // --- IDs DAS PLANILHAS ---
         const SHEET_ID_DIARIAS = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
-        const SHEET_ID_GABINETES = "1GwDig1yn9YIX8FSsHFPHL2iLCtwsZkNnquNjp5D7Oaw";
+        const SHEET_ID_GABINETES = "INSIRA_AQUI_A_ID_DA_PLANILHA_DE_VEREADORES"; 
 
         let tabela;
         let dadosGlobais = [];
@@ -128,10 +120,14 @@
 
         function getCsvUrl(id) { return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&t=${Date.now()}`; }
 
-        // --- Processamento Seguro de CSV ---
+        // Função de parsing robusta
         function csvParaArray(str) {
+            // Remove o BOM (caractere invisível de início de arquivo)
+            if (str.startsWith('\ufeff')) str = str.substring(1);
+            
             const linhas = str.trim().split("\n");
             if(linhas.length === 0) return [];
+            
             const cabecalhoLinha = linhas.shift();
             
             function extrairValores(linha) {
@@ -155,7 +151,6 @@
             });
         }
 
-        // --- Tratamentos de Dados ---
         function formatarMoeda(valor) {
             if (!valor) return "";
             let v = valor.trim();
@@ -170,29 +165,14 @@
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
         }
 
-        function extrairData(dataStr) {
-            if (!dataStr) return {};
-            const partes = dataStr.split("/");
-            return { mes: partes[1], ano: partes[2] };
-        }
-
-        function formatarDataParaOrdenacao(dataStr) {
-            if (!dataStr) return "00000000";
-            const partes = dataStr.split("/");
-            if (partes.length !== 3) return dataStr; 
-            return `${partes[2]}${partes[1]}${partes[0]}`;
-        }
-
-        // --- Filtros e Renderização ---
         function preencherFiltros() {
-            // Guarda valores selecionados para não resetar ao clicar em "Atualizar"
             const valServidor = $('#filtroServidor').val();
             const valAno = $('#filtroAno').val();
             const valGabinete = $('#filtroGabinete').val();
 
-            // Histórico de Servidores (Puxa tudo da planilha de diárias)
+            // Servidores e Anos (Histórico Completo)
             const servidores = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
-            const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].sort();
+            const anos = [...new Set(dadosGlobais.map(d => (d["data da partida"] || "").split("/")[2]))].filter(a => a).sort();
             
             $('#filtroServidor').html('<option value="">Servidor</option>');
             servidores.forEach(s => { if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); });
@@ -200,14 +180,15 @@
             $('#filtroAno').html('<option value="">Ano</option>');
             anos.forEach(a => { if(a) $('#filtroAno').append(`<option value="${a}">${a}</option>`); });
 
-            // Gabinetes Ativos (Puxa SOMENTE da planilha secundária)
+            // Gabinetes (Apenas os ativos da planilha 2)
             $('#filtroGabinete').html('<option value="">Gabinete</option>');
             listaGabinetes.forEach(g => {
-                const nomeGabinete = Object.values(g)[0]; // Pega a coluna A da planilha 2
-                if(nomeGabinete) $('#filtroGabinete').append(`<option value="${nomeGabinete}">${nomeGabinete}</option>`);
+                const colunas = Object.values(g);
+                if(colunas.length > 0 && colunas[0]) {
+                    $('#filtroGabinete').append(`<option value="${colunas[0]}">${colunas[0]}</option>`);
+                }
             });
 
-            // Restaura as seleções
             $('#filtroServidor').val(valServidor);
             $('#filtroAno').val(valAno);
             $('#filtroGabinete').val(valGabinete);
@@ -216,16 +197,20 @@
         function render(dados) {
             let html = "";
             dados.forEach(d => {
-                const ordemPartida = formatarDataParaOrdenacao(d["data da partida"]);
-                const ordemRetorno = formatarDataParaOrdenacao(d["data do retorno"]);
+                // Ordenação por data
+                const p = (d["data da partida"] || "").split("/");
+                const r = (d["data do retorno"] || "").split("/");
+                const sortP = p.length === 3 ? p[2]+p[1]+p[0] : "00000000";
+                const sortR = r.length === 3 ? r[2]+r[1]+r[0] : "00000000";
+
                 html += `<tr>
                     <td>${d.servidor || ""}</td>
                     <td>${d["cargo ou função"] || ""}</td>
                     <td>${d["n de diárias"] || ""}</td>
                     <td>${formatarMoeda(d["valor diarias"])}</td>
                     <td>${formatarMoeda(d["valor adiantamento"])}</td>
-                    <td data-sort="${ordemPartida}">${d["data da partida"] || ""}</td>
-                    <td data-sort="${ordemRetorno}">${d["data do retorno"] || ""}</td>
+                    <td data-sort="${sortP}">${d["data da partida"] || ""}</td>
+                    <td data-sort="${sortR}">${d["data do retorno"] || ""}</td>
                     <td>${d["local de destino"] || ""}</td>
                     <td>${d.cidade || ""}</td>
                     <td>${d.finalidade || ""}</td>
@@ -234,21 +219,12 @@
 
             if (tabela) tabela.destroy();
             $('#tabela tbody').html(html);
-
             tabela = $('#tabela').DataTable({
-                pageLength: 10, 
-                responsive: true, 
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-                initComplete: function() { $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...'); },
-                
-                // Lógica de Soma no Rodapé
+                pageLength: 10, responsive: true, language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 footerCallback: function (row, data, start, end, display) {
-                    let api = this.api();
-                    let intVal = i => typeof i === 'string' ? parseFloat(i.replace(/R\$\s?|[.]/g, '').replace(',', '.')) || 0 : typeof i === 'number' ? i : 0;
-                    
+                    let api = this.api(), intVal = i => typeof i === 'string' ? parseFloat(i.replace(/R\$\s?|[.]/g, '').replace(',', '.')) || 0 : typeof i === 'number' ? i : 0;
                     let totalD = api.column(3, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
                     let totalA = api.column(4, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
-                    
                     let f = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
                     $(api.column(3).footer()).html(f.format(totalD));
                     $(api.column(4).footer()).html(f.format(totalA));
@@ -256,19 +232,38 @@
             });
         }
 
-        function aplicarFiltros() {
-            const serv = $('#filtroServidor').val();
-            const mes = $('#filtroMes').val();
-            const ano = $('#filtroAno').val();
-            const gab = $('#filtroGabinete').val();
+        async function iniciarCarregamento() {
+            $('#loader').show(); $('#main-container').hide();
+            try {
+                const [resD, resG] = await Promise.all([
+                    fetch(getCsvUrl(SHEET_ID_DIARIAS), { cache: "no-store" }),
+                    fetch(getCsvUrl(SHEET_ID_GABINETES), { cache: "no-store" })
+                ]);
+                const txtD = await resD.text();
+                const txtG = await resG.text();
 
-            const resultado = dadosGlobais.filter(d => {
-                const dt = extrairData(d["data da partida"]);
-                const matchServ = !serv || d.servidor === serv;
-                const matchMes = !mes || dt.mes === mes;
-                const matchAno = !ano || dt.ano === ano;
+                if(txtD.includes("<html") || txtG.includes("<html")) throw new Error("Acesso negado às planilhas.");
+
+                dadosGlobais = csvParaArray(txtD);
+                listaGabinetes = csvParaArray(txtG);
+
+                preencherFiltros();
+                aplicarFiltros();
                 
-                // Lógica de Gabinete: Procura no nome OU no cargo
+                $('#loader').hide(); $('#main-container').fadeIn();
+            } catch (e) {
+                $('#loader').html(`<p style="color:red">Erro: ${e.message}. Verifique as permissões das planilhas.</p>`);
+            }
+        }
+
+        function aplicarFiltros() {
+            const serv = $('#filtroServidor').val(), mes = $('#filtroMes').val(), ano = $('#filtroAno').val(), gab = $('#filtroGabinete').val();
+            const resultado = dadosGlobais.filter(d => {
+                const dP = d["data da partida"] || "";
+                const m = dP.split("/")[1], a = dP.split("/")[2];
+                const matchServ = !serv || d.servidor === serv;
+                const matchMes = !mes || m === mes;
+                const matchAno = !ano || a === ano;
                 let matchGab = true;
                 if (gab) {
                     const g = removerAcentos(gab).toLowerCase();
@@ -276,110 +271,32 @@
                     const c = removerAcentos(d["cargo ou função"]).toLowerCase();
                     matchGab = n.includes(g) || c.includes(g);
                 }
-                
                 return matchServ && matchMes && matchAno && matchGab;
             });
             render(resultado);
         }
 
-        function limparFiltros() { 
-            $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').val(''); 
-            aplicarFiltros(); 
-        }
+        function limparFiltros() { $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').val(''); aplicarFiltros(); }
 
-        // --- Carregamento Simultâneo das Planilhas ---
-        async function iniciarCarregamento() {
-            $('#loader').show(); $('#main-container').hide();
-            $('#loader').html('<div class="spinner"></div><span>Buscando dados nas planilhas...</span>');
-            
-            try {
-                const [resDiarias, resGabinetes] = await Promise.all([
-                    fetch(getCsvUrl(SHEET_ID_DIARIAS), { cache: "no-store" }),
-                    fetch(getCsvUrl(SHEET_ID_GABINETES), { cache: "no-store" })
-                ]);
-
-                const txtDiarias = await resDiarias.text();
-                const txtGabinetes = await resGabinetes.text();
-
-                if (txtDiarias.trim().toLowerCase().startsWith("<!doctype")) throw new Error("Verifique o acesso (Qualquer pessoa com link) na Planilha de Diárias.");
-                if (txtGabinetes.trim().toLowerCase().startsWith("<!doctype")) throw new Error("Verifique o acesso (Qualquer pessoa com link) na Planilha de Gabinetes.");
-
-                dadosGlobais = csvParaArray(txtDiarias);
-                listaGabinetes = csvParaArray(txtGabinetes);
-
-                preencherFiltros();
-                
-                if (!$('#filtroMes').val() && !$('#filtroAno').val()) {
-                    const hoje = new Date();
-                    $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
-                    $('#filtroAno').val(String(hoje.getFullYear()));
-                }
-
-                aplicarFiltros();
-                
-                $('#loader').hide(); $('#main-container').fadeIn();
-            } catch (e) {
-                console.error(e);
-                $('#loader').html(`
-                    <div style="text-align: center; color: #c1272d; background: #ffebeb; padding: 20px; border-radius: 8px; border: 1px solid #c1272d;">
-                        <h3 style="margin: 0 0 10px 0;">⚠️ Erro de Comunicação</h3>
-                        <p style="margin: 0 0 15px 0; font-size: 14px;">${e.message}</p>
-                        <button onclick="location.reload()" style="padding: 10px 15px; background: #003b75; color: white; border: none; border-radius: 5px; cursor: pointer;">Tentar Novamente</button>
-                    </div>
-                `);
-            }
-        }
-
-        // --- Funções de Exportação ---
-        function obterDadosFiltradosDoDOM() {
-            const dadosDaTabela = [];
-            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
-                const row = this.node();
-                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
-                dadosDaTabela.push({
-                    "Servidor": colunas[0], "Cargo": colunas[1], "Nº Diárias": colunas[2], "Valor Diárias": colunas[3],
-                    "Adiantamento": colunas[4], "Data Partida": colunas[5], "Data Retorno": colunas[6],
-                    "Destino": colunas[7], "Cidade": colunas[8], "Finalidade": colunas[9]
-                });
+        function exportarXLSX() {
+            const dados = tabela.rows({filter:'applied'}).data().toArray().map(row => {
+                return { "Servidor": row[0], "Cargo": row[1], "Diárias": row[2], "Valor": row[3], "Adiantamento": row[4], "Partida": row[5], "Retorno": row[6], "Destino": row[7], "Cidade": row[8], "Finalidade": row[9] };
             });
-            return dadosDaTabela;
+            const ws = XLSX.utils.json_to_sheet(dados);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Relatório");
+            XLSX.writeFile(wb, "relatorio_diarias.xlsx");
         }
 
         function exportarCSV() {
-            const dados = obterDadosFiltradosDoDOM();
-            if (!dados.length) return;
-            const headers = Object.keys(dados[0]);
-            let csv = headers.join(",") + "\n";
-            dados.forEach(row => {
-                csv += headers.map(h => `"${row[h].replace(/"/g, '""')}"`).join(",") + "\n";
-            });
-            baixarArquivo(csv, "diarias_filtradas.csv", "text/csv");
-        }
-
-        function exportarXLSX() {
-            const dados = obterDadosFiltradosDoDOM();
-            if (!dados.length) return;
-            const worksheet = XLSX.utils.json_to_sheet(dados);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias Filtradas");
-            XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
-        }
-
-        function exportarJSON() {
-            const dados = obterDadosFiltradosDoDOM();
-            if (!dados.length) return;
-            baixarArquivo(JSON.stringify(dados, null, 2), "diarias_filtradas.json", "application/json");
-        }
-
-        function baixarArquivo(content, name, type) {
-            const blob = new Blob([content], { type });
+            const dados = tabela.rows({filter:'applied'}).data().toArray();
+            let csv = "Servidor,Cargo,Diarias,Valor,Adiantamento,Partida,Retorno,Destino,Cidade,Finalidade\n";
+            dados.forEach(r => { csv += r.map(c => `"${c}"`).join(",") + "\n"; });
+            const blob = new Blob([csv], { type: "text/csv" });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url; a.download = name; a.click();
-            URL.revokeObjectURL(url);
+            const a = document.createElement("a"); a.href = url; a.download = "relatorio.csv"; a.click();
         }
 
-        // Gatilhos
         $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').on('change', aplicarFiltros);
         window.onload = iniciarCarregamento;
     </script>
