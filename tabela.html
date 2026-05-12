@@ -27,7 +27,6 @@
             align-items: center;
         }
 
-        /* Alterado de .topo h2 para .topo h1 */
         .topo h1 {
             margin: 0;
             font-size: 1.5rem;
@@ -144,7 +143,6 @@
             .container { box-shadow: none; margin: 0; padding: 0; width: 100%; }
             table.dataTable { border-collapse: collapse !important; width: 100% !important; }
             table.dataTable th, table.dataTable td { border: 1px solid #ddd !important; font-size: 10px !important; padding: 6px !important; }
-            /* Evita quebras de linha no meio da tabela */
             tr { page-break-inside: avoid; }
         }
     </style>
@@ -168,7 +166,10 @@
     <main class="container" id="main-container">
         <div class="toolbar">
             <div class="toolbar-row">
+                <select id="filtroGabinete"><option value="">Gabinete</option></select>
+                
                 <select id="filtroServidor"><option value="">Servidor</option></select>
+                
                 <select id="filtroMes">
                     <option value="">Mês</option>
                     <option value="01">Janeiro</option> <option value="02">Fevereiro</option>
@@ -179,6 +180,7 @@
                     <option value="11">Novembro</option> <option value="12">Dezembro</option>
                 </select>
                 <select id="filtroAno"><option value="">Ano</option></select>
+                
                 <button onclick="limparFiltros()">Limpar filtros</button>
             </div>
 
@@ -270,180 +272,21 @@
             return `R$ ${valorLimpo}`;
         }
 
+        // Função útil para ignorar acentos (ex: Júnior == Junior)
+        function removerAcentos(str) {
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
         function preencherFiltros() {
             const valServidor = $('#filtroServidor').val();
             const valAno = $('#filtroAno').val();
+            const valGabinete = $('#filtroGabinete').val();
 
             $('#filtroServidor').html('<option value="">Servidor</option>');
             $('#filtroAno').html('<option value="">Ano</option>');
+            $('#filtroGabinete').html('<option value="">Gabinete</option>');
 
             const servidores = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
             const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].sort();
             
-            servidores.forEach(s => { if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); });
-            anos.forEach(a => { if (a) $('#filtroAno').append(`<option value="${a}">${a}</option>`); });
-
-            $('#filtroServidor').val(valServidor);
-            $('#filtroAno').val(valAno);
-        }
-
-        function render(dados) {
-            let html = "";
-            dados.forEach(d => {
-                const ordemPartida = formatarDataParaOrdenacao(d["data da partida"]);
-                const ordemRetorno = formatarDataParaOrdenacao(d["data do retorno"]);
-                html += `
-                    <tr>
-                        <td>${d.servidor || ""}</td>
-                        <td>${d["cargo ou função"] || ""}</td>
-                        <td>${d["n de diárias"] || ""}</td>
-                        <td>${formatarMoeda(d["valor diarias"])}</td>
-                        <td>${formatarMoeda(d["valor adiantamento"])}</td>
-                        <td data-sort="${ordemPartida}">${d["data da partida"] || ""}</td>
-                        <td data-sort="${ordemRetorno}">${d["data do retorno"] || ""}</td>
-                        <td>${d["local de destino"] || ""}</td>
-                        <td>${d.cidade || ""}</td>
-                        <td>${d.finalidade || ""}</td>
-                    </tr>`;
-            });
-
-            if (tabela) tabela.destroy();
-            $('#tabela tbody').html(html);
-            
-            tabela = $('#tabela').DataTable({
-                pageLength: 10,
-                responsive: true,
-                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
-                initComplete: function() {
-                    $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...');
-                },
-                footerCallback: function (row, data, start, end, display) {
-                    let api = this.api();
-
-                    let intVal = function (i) {
-                        if (typeof i === 'string') {
-                            if (i === "-") return 0;
-                            return parseFloat(i.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.'));
-                        }
-                        return typeof i === 'number' ? i : 0;
-                    };
-
-                    let totalDiarias = api.column(3, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
-                    let totalAdiantamento = api.column(4, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
-
-                    let formatador = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-
-                    $(api.column(3).footer()).html(formatador.format(totalDiarias));
-                    $(api.column(4).footer()).html(formatador.format(totalAdiantamento));
-                }
-            });
-        }
-
-        async function iniciarCarregamento() {
-            $('#loader').show();
-            $('#main-container').hide();
-            
-            try {
-                const res = await fetch(getSheetUrl(), { cache: "no-store" });
-                const csv = await res.text();
-                dadosGlobais = csvParaArray(csv);
-                preencherFiltros();
-                
-                if (!$('#filtroMes').val() && !$('#filtroAno').val()) {
-                    const hoje = new Date();
-                    $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
-                    $('#filtroAno').val(String(hoje.getFullYear()));
-                }
-
-                aplicarFiltros(); 
-            } catch (erro) { 
-                console.error("Erro:", erro); 
-                alert("Falha ao carregar a planilha. Tente novamente.");
-            } finally {
-                $('#loader').hide();
-                $('#main-container').fadeIn(); 
-            }
-        }
-
-        function aplicarFiltros() {
-            const serv = $('#filtroServidor').val();
-            const mes = $('#filtroMes').val();
-            const ano = $('#filtroAno').val();
-            
-            dadosFiltrados = dadosGlobais.filter(d => {
-                const dt = extrairData(d["data da partida"]);
-                return (!serv || d.servidor === serv) && (!mes || dt.mes === mes) && (!ano || dt.ano === ano);
-            });
-            
-            render(dadosFiltrados);
-        }
-
-        function limparFiltros() {
-            $('#filtroServidor, #filtroMes, #filtroAno').val('');
-            dadosFiltrados = [...dadosGlobais];
-            render(dadosGlobais);
-        }
-
-        function exportarCSV() {
-            const dadosParaExportar = tabela.rows({ filter: 'applied' }).data().toArray();
-            if (!dadosParaExportar.length) return;
-            
-            const headers = ["Servidor", "Cargo", "N Diárias", "Valor Diárias", "Adiantamento", "Data Partida", "Data Retorno", "Destino", "Cidade", "Finalidade"];
-            let csv = headers.join(",") + "\n";
-            
-            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
-                const row = this.node();
-                const colunas = $(row).find('td').map(function() { return `"${$(this).text().replace(/"/g, '""')}"`; }).get();
-                csv += colunas.join(",") + "\n";
-            });
-            baixarArquivo(csv, "diarias_filtradas.csv", "text/csv");
-        }
-
-        function exportarXLSX() {
-            const dadosDaTabela = [];
-            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
-                const row = this.node();
-                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
-                dadosDaTabela.push({
-                    "Servidor": colunas[0], "Cargo": colunas[1], "Nº Diárias": colunas[2], "Valor Diárias": colunas[3],
-                    "Adiantamento": colunas[4], "Data Partida": colunas[5], "Data Retorno": colunas[6],
-                    "Destino": colunas[7], "Cidade": colunas[8], "Finalidade": colunas[9]
-                });
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(dadosDaTabela);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias Filtradas");
-            XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
-        }
-
-        function exportarJSON() {
-            const dadosDaTabela = [];
-            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
-                const row = this.node();
-                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
-                dadosDaTabela.push({
-                    servidor: colunas[0], cargo: colunas[1], num_diarias: colunas[2], valor_diarias: colunas[3],
-                    adiantamento: colunas[4], data_partida: colunas[5], data_retorno: colunas[6],
-                    destino: colunas[7], cidade: colunas[8], finalidade: colunas[9]
-                });
-            });
-            baixarArquivo(JSON.stringify(dadosDaTabela, null, 2), "diarias_filtradas.json", "application/json");
-        }
-
-        function baixarArquivo(content, name, type) {
-            const blob = new Blob([content], { type });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url; a.download = name; a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
-
-        window.onload = function () {
-            iniciarCarregamento();
-        };
-    </script>
-</body>
-</html>
+            // Lógica para extrair intel
