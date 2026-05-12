@@ -38,10 +38,15 @@
         /* Tabela DataTables */
         table.dataTable thead th { background: #003b75 !important; color: white !important; text-transform: uppercase; font-size: 12px; padding: 12px; }
         table.dataTable tfoot th { background: #f4f6f9 !important; color: #003b75 !important; font-size: 14px; font-weight: bold; padding: 12px; border-top: 2px solid #003b75; }
+        
+        /* Espaçamento corrigido entre busca e tabela */
+        .dataTables_wrapper .dataTables_filter, 
+        .dataTables_wrapper .dataTables_length { margin-bottom: 15px; }
+        
         .dataTables_wrapper .dataTables_filter label { font-size: 0; }
         .dataTables_wrapper .dataTables_filter input { font-size: 14px; padding: 6px 10px; }
         
-        /* Modo Impressão Limpa */
+        /* Modo Impressão */
         @media print {
             .topo, .toolbar, .dataTables_filter, .dataTables_filter input, .dataTables_length, .dataTables_info, .dataTables_paginate { display: none !important; }
             .container { box-shadow: none; width: 100%; margin: 0; padding: 0; }
@@ -120,7 +125,7 @@
         // CONFIGURAÇÕES DAS PLANILHAS DO GOOGLE
         // ==========================================
         const SHEET_ID_DIARIAS = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
-        const SHEET_ID_GABINETES = "1GwDig1yn9YIX8FSsHFPHL2iLCtwsZkNnquNjp5D7Oaw";
+        const SHEET_ID_GABINETES = "1GwDig1yn9YIX8FSsHFPHL2iLCtwsZkNnquNjp5D7Oaw"; 
 
         let tabela;
         let dadosGlobais = [];
@@ -128,12 +133,10 @@
 
         function getCsvUrl(id) { return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&t=${Date.now()}`; }
 
-        // --- Processamento Seguro de CSV ---
         function csvParaArray(str) {
             if (str.startsWith('\ufeff')) str = str.substring(1);
             const linhas = str.trim().split("\n");
             if(linhas.length === 0) return [];
-            
             const cabecalhoLinha = linhas.shift();
             
             function extrairValores(linha) {
@@ -157,7 +160,6 @@
             });
         }
 
-        // --- Tratamentos de Dados ---
         function formatarMoeda(valor) {
             if (!valor) return "";
             let v = valor.trim();
@@ -172,20 +174,6 @@
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); 
         }
 
-        function extrairData(dataStr) {
-            if (!dataStr) return {};
-            const partes = dataStr.split("/");
-            return { mes: partes[1], ano: partes[2] };
-        }
-
-        function formatarDataParaOrdenacao(dataStr) {
-            if (!dataStr) return "00000000";
-            const partes = dataStr.split("/");
-            if (partes.length !== 3) return dataStr; 
-            return `${partes[2]}${partes[1]}${partes[0]}`;
-        }
-
-        // --- Filtros e Renderização ---
         function preencherFiltros() {
             const valServidor = $('#filtroServidor').val();
             const valAno = $('#filtroAno').val();
@@ -288,7 +276,6 @@
             aplicarFiltros(); 
         }
 
-        // --- Carregamento ---
         async function iniciarCarregamento() {
             $('#loader').show(); $('#main-container').hide();
             $('#loader').html('<div class="spinner"></div><span>Buscando dados nas planilhas...</span>');
@@ -329,7 +316,6 @@
             }
         }
 
-        // --- Funções de Exportação ---
         function obterDadosFiltradosDoDOM() {
             const dadosDaTabela = [];
             $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
@@ -364,7 +350,6 @@
             XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
         }
 
-        // Função JSON restaurada!
         function exportarJSON() {
             const dados = obterDadosFiltradosDoDOM();
             if (!dados.length) return;
@@ -379,7 +364,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // Gatilhos
         $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').on('change', aplicarFiltros);
         window.onload = iniciarCarregamento;
     </script>
