@@ -253,8 +253,10 @@
             }
             
             $('#tabela tbody').html(html);
+            
+            // Tabela configurada para 10 resultados por página
             tabela = $('#tabela').DataTable({
-                pageLength: 15,
+                pageLength: 10,
                 scrollX: true,
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
