@@ -1,194 +1,429 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
 
-<title>Tabela Interativa Completa</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    />
 
-<!-- DataTables -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <title>Relatório de Diárias</title>
 
-<!-- Buttons -->
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css">
+    <!-- DataTables -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css"
+    />
 
-<!-- ColReorder -->
-<link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.6.2/css/colReorder.dataTables.min.css">
+    <!-- Buttons -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css"
+    />
 
-<style>
-body{
-    font-family: Arial, sans-serif;
-    margin:20px;
-    background:#f5f7fa;
-}
+    <!-- ColReorder -->
+    <link
+        rel="stylesheet"
+        href="https://cdn.datatables.net/colreorder/1.6.2/css/colReorder.dataTables.min.css"
+    />
 
-.container{
-    background:#fff;
-    padding:20px;
-    border-radius:10px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.1);
-    overflow-x:auto;
-}
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f1f1f1;
+        }
 
-h1{
-    margin-top:0;
-    color:#003366;
-}
+        /* CABEÇALHO */
+        .topo {
+            background: #003b75;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            border-bottom: 4px solid #d4a100;
+            margin-bottom: 18px;
+        }
 
-label {
-    font-size: 14px;
-}
+        .topo h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
 
-select {
-    padding: 5px;
-    margin-top: 5px;
-    margin-bottom: 15px;
-}
+        .topo h2 {
+            margin: 4px 0 0;
+            font-size: 18px;
+            font-weight: normal;
+        }
 
-table.dataTable {
-    width: 100% !important;
-}
-</style>
+        /* CONTAINER */
+        .container {
+            background: white;
+            padding: 15px;
+            border: 1px solid #cfcfcf;
+            overflow-x: auto;
+        }
 
+        /* DATATABLE */
+        .dataTables_wrapper {
+            overflow: hidden;
+        }
+
+        table.dataTable {
+            width: 100% !important;
+            margin-bottom: 0 !important;
+            border-collapse: collapse !important;
+            font-size: 12px;
+        }
+
+        /* CABEÇALHO TABELA */
+        table.dataTable thead th {
+            background: #003b75 !important;
+            color: white !important;
+            border: 1px solid #2d4f73 !important;
+            text-align: center;
+            padding: 10px 6px !important;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* CÉLULAS */
+        table.dataTable tbody td {
+            border: 1px solid #d3d3d3 !important;
+            padding: 8px 6px !important;
+            vertical-align: top;
+            color: #000;
+        }
+
+        /* ZEBRADO */
+        table.dataTable tbody tr:nth-child(even) {
+            background: #f7f7f7;
+        }
+
+        table.dataTable tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        /* HOVER */
+        table.dataTable tbody tr:hover {
+            background: #e8f1fb !important;
+        }
+
+        /* CONTROLES */
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #bbb;
+            padding: 4px;
+        }
+
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #bbb;
+            padding: 4px;
+        }
+
+        /* BOTÕES */
+        .dt-button {
+            background: #003b75 !important;
+            color: white !important;
+            border: none !important;
+            padding: 6px 12px !important;
+            border-radius: 3px !important;
+        }
+
+        .dt-button:hover {
+            background: #002a52 !important;
+        }
+
+        /* RODAPÉ */
+        .rodape {
+            text-align: right;
+            font-size: 11px;
+            color: #777;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+    <!-- TOPO -->
+    <div class="topo">
+        <h1>CÂMARA MUNICIPAL DE MARÍLIA</h1>
+        <h2>Relatório de Diárias e Adiantamentos - Janeiro/2026</h2>
+    </div>
 
-<h1>Equipe Corporativa</h1>
+    <div class="container">
 
-<!-- 🔥 FILTRO DE ANO -->
-<label for="filtroAno"><strong>Filtrar por ano de admissão:</strong></label>
-<select id="filtroAno">
-    <option value="">Todos</option>
-</select>
+        <table
+            id="tabela"
+            class="display nowrap"
+            style="width: 100%;"
+        >
 
-<table id="tabela" class="display nowrap" style="width:100%">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Cargo</th>
+                    <th>Cidade</th>
+                    <th>Departamento</th>
+                    <th>Idade</th>
+                    <th>Salário</th>
+                    <th>Status</th>
+                    <th>Data Admissão</th>
+                    <th>Performance</th>
+                </tr>
+            </thead>
 
-<thead>
-<tr>
-    <th>Nome</th>
-    <th>Cargo</th>
-    <th>Cidade</th>
-    <th>Departamento</th>
-    <th>Idade</th>
-    <th>Salário</th>
-    <th>Status</th>
-    <th>Data Admissão</th>
-    <th>Performance</th>
-</tr>
-</thead>
+            <tbody>
 
-<tbody>
+                <tr>
+                    <td>João Silva</td>
+                    <td>Designer</td>
+                    <td>São Paulo</td>
+                    <td>Marketing</td>
+                    <td>29</td>
+                    <td>R$ 5.200</td>
+                    <td>Ativo</td>
+                    <td>12/03/2021</td>
+                    <td>92%</td>
+                </tr>
 
-<tr><td>João Silva</td><td>Designer</td><td>São Paulo</td><td>Marketing</td><td>29</td><td>R$ 5.200</td><td>Ativo</td><td>12/03/2021</td><td>92%</td></tr>
-<tr><td>Maria Oliveira</td><td>Dev</td><td>Rio</td><td>Tecnologia</td><td>31</td><td>R$ 8.400</td><td>Ativo</td><td>05/09/2020</td><td>97%</td></tr>
-<tr><td>Carlos Souza</td><td>Analista</td><td>BH</td><td>Financeiro</td><td>35</td><td>R$ 6.700</td><td>Ativo</td><td>17/01/2019</td><td>88%</td></tr>
-<tr><td>Ana Costa</td><td>RH</td><td>Curitiba</td><td>RH</td><td>38</td><td>R$ 9.100</td><td>Ativo</td><td>11/11/2018</td><td>95%</td></tr>
+                <tr>
+                    <td>Maria Oliveira</td>
+                    <td>Dev</td>
+                    <td>Rio</td>
+                    <td>Tecnologia</td>
+                    <td>31</td>
+                    <td>R$ 8.400</td>
+                    <td>Ativo</td>
+                    <td>05/09/2020</td>
+                    <td>97%</td>
+                </tr>
 
-<tr><td>Fernanda Lima</td><td>UX</td><td>Florianópolis</td><td>Produto</td><td>27</td><td>R$ 6.300</td><td>Férias</td><td>22/06/2022</td><td>90%</td></tr>
-<tr><td>Ricardo Mendes</td><td>Gerente</td><td>Campinas</td><td>Operações</td><td>41</td><td>R$ 12.500</td><td>Ativo</td><td>15/04/2017</td><td>98%</td></tr>
-<tr><td>Patrícia Rocha</td><td>Analista BI</td><td>Brasília</td><td>BI</td><td>30</td><td>R$ 7.800</td><td>Ativo</td><td>09/08/2021</td><td>91%</td></tr>
-<tr><td>Eduardo Martins</td><td>DevOps</td><td>Porto Alegre</td><td>Tecnologia</td><td>33</td><td>R$ 9.600</td><td>Ativo</td><td>14/02/2020</td><td>94%</td></tr>
-<tr><td>Juliana Ferreira</td><td>Assistente</td><td>Recife</td><td>Adm</td><td>26</td><td>R$ 3.900</td><td>Ativo</td><td>02/12/2023</td><td>85%</td></tr>
-<tr><td>Lucas Almeida</td><td>SEO</td><td>Fortaleza</td><td>Marketing</td><td>32</td><td>R$ 5.900</td><td>Licença</td><td>18/05/2022</td><td>89%</td></tr>
+                <tr>
+                    <td>Carlos Souza</td>
+                    <td>Analista</td>
+                    <td>BH</td>
+                    <td>Financeiro</td>
+                    <td>35</td>
+                    <td>R$ 6.700</td>
+                    <td>Ativo</td>
+                    <td>17/01/2019</td>
+                    <td>88%</td>
+                </tr>
 
-</tbody>
+                <tr>
+                    <td>Ana Costa</td>
+                    <td>RH</td>
+                    <td>Curitiba</td>
+                    <td>RH</td>
+                    <td>38</td>
+                    <td>R$ 9.100</td>
+                    <td>Ativo</td>
+                    <td>11/11/2018</td>
+                    <td>95%</td>
+                </tr>
 
-</table>
+                <tr>
+                    <td>Fernanda Lima</td>
+                    <td>UX</td>
+                    <td>Florianópolis</td>
+                    <td>Produto</td>
+                    <td>27</td>
+                    <td>R$ 6.300</td>
+                    <td>Férias</td>
+                    <td>22/06/2022</td>
+                    <td>90%</td>
+                </tr>
 
-</div>
+                <tr>
+                    <td>Ricardo Mendes</td>
+                    <td>Gerente</td>
+                    <td>Campinas</td>
+                    <td>Operações</td>
+                    <td>41</td>
+                    <td>R$ 12.500</td>
+                    <td>Ativo</td>
+                    <td>15/04/2017</td>
+                    <td>98%</td>
+                </tr>
 
-<!-- JS -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+                <tr>
+                    <td>Patrícia Rocha</td>
+                    <td>Analista BI</td>
+                    <td>Brasília</td>
+                    <td>BI</td>
+                    <td>30</td>
+                    <td>R$ 7.800</td>
+                    <td>Ativo</td>
+                    <td>09/08/2021</td>
+                    <td>91%</td>
+                </tr>
 
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+                <tr>
+                    <td>Eduardo Martins</td>
+                    <td>DevOps</td>
+                    <td>Porto Alegre</td>
+                    <td>Tecnologia</td>
+                    <td>33</td>
+                    <td>R$ 9.600</td>
+                    <td>Ativo</td>
+                    <td>14/02/2020</td>
+                    <td>94%</td>
+                </tr>
 
-<!-- Buttons -->
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+                <tr>
+                    <td>Juliana Ferreira</td>
+                    <td>Assistente</td>
+                    <td>Recife</td>
+                    <td>Adm</td>
+                    <td>26</td>
+                    <td>R$ 3.900</td>
+                    <td>Ativo</td>
+                    <td>02/12/2023</td>
+                    <td>85%</td>
+                </tr>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+                <tr>
+                    <td>Lucas Almeida</td>
+                    <td>SEO</td>
+                    <td>Fortaleza</td>
+                    <td>Marketing</td>
+                    <td>32</td>
+                    <td>R$ 5.900</td>
+                    <td>Licença</td>
+                    <td>18/05/2022</td>
+                    <td>89%</td>
+                </tr>
 
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+                <tr>
+                    <td>Bruno Martins</td>
+                    <td>Analista de Sistemas</td>
+                    <td>São Paulo</td>
+                    <td>Tecnologia</td>
+                    <td>28</td>
+                    <td>R$ 7.200</td>
+                    <td>Ativo</td>
+                    <td>10/02/2023</td>
+                    <td>93%</td>
+                </tr>
 
-<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
+                <tr>
+                    <td>Camila Ribeiro</td>
+                    <td>Marketing</td>
+                    <td>Rio de Janeiro</td>
+                    <td>Marketing</td>
+                    <td>27</td>
+                    <td>R$ 5.500</td>
+                    <td>Ativo</td>
+                    <td>21/07/2022</td>
+                    <td>88%</td>
+                </tr>
 
-<!-- ColReorder -->
-<script src="https://cdn.datatables.net/colreorder/1.6.2/js/dataTables.colReorder.min.js"></script>
+                <tr>
+                    <td>Fernando Alves</td>
+                    <td>Dev Backend</td>
+                    <td>Curitiba</td>
+                    <td>Tecnologia</td>
+                    <td>34</td>
+                    <td>R$ 10.200</td>
+                    <td>Ativo</td>
+                    <td>03/03/2019</td>
+                    <td>96%</td>
+                </tr>
 
-<script>
-$(document).ready(function () {
+                <tr>
+                    <td>Patrícia Gomes</td>
+                    <td>RH</td>
+                    <td>Brasília</td>
+                    <td>RH</td>
+                    <td>36</td>
+                    <td>R$ 8.900</td>
+                    <td>Ativo</td>
+                    <td>14/09/2018</td>
+                    <td>94%</td>
+                </tr>
 
-    var table = $('#tabela').DataTable({
+                <tr>
+                    <td>Rafael Santos</td>
+                    <td>Suporte Técnico</td>
+                    <td>Porto Alegre</td>
+                    <td>TI</td>
+                    <td>30</td>
+                    <td>R$ 4.800</td>
+                    <td>Ativo</td>
+                    <td>11/11/2021</td>
+                    <td>87%</td>
+                </tr>
 
-        dom: 'Bfrtip',
+            </tbody>
 
-        pageLength: 10,
+        </table>
 
-        scrollX: true,
+        <!-- RODAPÉ -->
+        <div class="rodape">
+            Portal da Transparência - Dados extraídos conforme Resolução nº 380/2022.
+        </div>
 
-        colReorder: true,
+    </div>
 
-        buttons: [
-            {
-                extend: 'colvis',
-                text: 'Selecionar Colunas'
-            },
-            {
-                extend: 'csvHtml5',
-                text: 'Download CSV',
-                exportOptions: {
-                    columns: ':visible'
-                }
-            },
-            {
-                extend: 'excelHtml5',
-                text: 'Download Excel',
-                exportOptions: {
-                    columns: ':visible'
-                }
-            }
-        ]
-    });
+    <!-- JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    // =========================
-    // 🔥 FILTRO DE ANO DINÂMICO
-    // =========================
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
-    var anos = [];
+    <!-- Buttons -->
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
 
-    table.column(7).data().each(function (value) {
-        var ano = value.split('/')[2];
-        if (!anos.includes(ano)) {
-            anos.push(ano);
-        }
-    });
+    <!-- ColReorder -->
+    <script src="https://cdn.datatables.net/colreorder/1.6.2/js/dataTables.colReorder.min.js"></script>
 
-    anos.sort();
+    <script>
+        $(document).ready(function () {
 
-    anos.forEach(function (ano) {
-        $('#filtroAno').append(`<option value="${ano}">${ano}</option>`);
-    });
+            $('#tabela').DataTable({
 
-    $.fn.dataTable.ext.search.push(function (settings, data) {
+                language: {
+                    search: "Pesquisa:"
+                },
 
-        var anoSelecionado = $('#filtroAno').val();
-        var anoTabela = data[7].split('/')[2];
+                dom: 'Bfrtip',
 
-        if (!anoSelecionado || anoSelecionado === anoTabela) {
-            return true;
-        }
+                pageLength: 10,
 
-        return false;
-    });
+                scrollX: true,
+                scrollCollapse: true,
 
-    $('#filtroAno').on('change', function () {
-        table.draw();
-    });
+                colReorder: true,
 
-});
-</script>
+                buttons: [
+                    {
+                        extend: 'colvis',
+                        text: 'Selecionar Colunas'
+                    },
+                    {
+                        extend: 'csvHtml5',
+                        text: 'Download CSV',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    },
+                    {
+                        extend: 'excelHtml5',
+                        text: 'Download Excel',
+                        exportOptions: {
+                            columns: ':visible'
+                        }
+                    }
+                ]
+            });
+
+        });
+    </script>
 
 </body>
 </html>
