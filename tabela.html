@@ -141,7 +141,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
-        const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo"; // ID extraído do seu link
+        const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo"; // Seu ID do Google Sheets
         let tabela;
         let dadosGlobais = [];
 
@@ -152,14 +152,16 @@
         // --- Processamento de Dados ---
 
         function csvParaArray(str) {
+            // Regex avançado que corta nas vírgulas, mas ignora vírgulas dentro de aspas duplas (ex: "150,00")
+            const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
             const linhas = str.trim().split("\n");
-            const cabecalho = linhas[0].split(",");
+            const cabecalho = linhas[0].split(regex).map(c => c.replace(/^"|"$/g, '').trim().toLowerCase());
 
             return linhas.slice(1).map(linha => {
-                const valores = linha.split(",");
+                const valores = linha.split(regex);
                 let obj = {};
                 cabecalho.forEach((coluna, i) => {
-                    obj[coluna.trim().toLowerCase()] = (valores[i] || "").trim();
+                    obj[coluna] = (valores[i] || "").replace(/^"|"$/g, '').trim();
                 });
                 return obj;
             });
@@ -172,6 +174,21 @@
                 mes: partes[1],
                 ano: partes[2]
             };
+        }
+
+        function formatarDataParaOrdenacao(dataStr) {
+            if (!dataStr) return "00000000"; // Caso a célula esteja vazia
+            const partes = dataStr.split("/");
+            if (partes.length !== 3) return dataStr; 
+            
+            // Retorna no formato AAAAMMDD (ex: 20260515)
+            return `${partes[2]}${partes[1]}${partes[0]}`;
+        }
+
+        function formatarMoeda(valor) {
+            if (!valor) return ""; // Retorna vazio se não houver valor
+            if (valor.includes("R$")) return valor; // Evita duplicar se já vier com R$ da planilha
+            return `R$ ${valor}`;
         }
 
         // --- Interface ---
@@ -192,15 +209,18 @@
         function render(dados) {
             let html = "";
             dados.forEach(d => {
+                const ordemPartida = formatarDataParaOrdenacao(d["data da partida"]);
+                const ordemRetorno = formatarDataParaOrdenacao(d["data do retorno"]);
+
                 html += `
                     <tr>
                         <td>${d.servidor || ""}</td>
                         <td>${d["cargo ou função"] || ""}</td>
                         <td>${d["n de diárias"] || ""}</td>
-                        <td>${d["valor diarias"] || ""}</td>
-                        <td>${d["valor adiantamento"] || ""}</td>
-                        <td>${d["data da partida"] || ""}</td>
-                        <td>${d["data do retorno"] || ""}</td>
+                        <td>${formatarMoeda(d["valor diarias"])}</td>
+                        <td>${formatarMoeda(d["valor adiantamento"])}</td>
+                        <td data-sort="${ordemPartida}">${d["data da partida"] || ""}</td>
+                        <td data-sort="${ordemRetorno}">${d["data do retorno"] || ""}</td>
                         <td>${d["local de destino"] || ""}</td>
                         <td>${d.cidade || ""}</td>
                         <td>${d.finalidade || ""}</td>
@@ -289,7 +309,8 @@
 
         window.onload = async function () {
             await carregar();
-            // Filtro automático para o mês/ano atual (opcional)
+            
+            // Filtro automático para o mês/ano atual ao abrir a página
             const hoje = new Date();
             $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
             $('#filtroAno').val(String(hoje.getFullYear()));
