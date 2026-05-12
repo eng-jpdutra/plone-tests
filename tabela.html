@@ -14,12 +14,26 @@
             background: #f4f6f9;
         }
 
-        /* Cabeçalho */
+        /* Cabeçalho Ajustado */
         .topo {
-            background: #003b75;
+            background: #c1272d; /* Vermelho Marília */
             color: white;
-            text-align: center;
-            padding: 14px;
+            padding: 10px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topo h2 {
+            margin: 0;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+
+        .brasao {
+            height: 80px; /* Ajuste o tamanho conforme necessário */
+            width: auto;
         }
 
         /* Layout Principal */
@@ -53,7 +67,7 @@
         }
 
         button {
-            background: #003b75;
+            background: #c1272d; /* Vermelho */
             color: white;
             border: none;
             cursor: pointer;
@@ -61,12 +75,12 @@
         }
 
         button:hover {
-            background: #002a52;
+            background: #8e1b1f; /* Vermelho Escuro */
         }
 
-        /* Customização DataTables */
+        /* Customização DataTables (Cabeçalho da Tabela Vermelho) */
         table.dataTable thead th {
-            background: #003b75 !important;
+            background: #c1272d !important;
             color: white !important;
             text-transform: uppercase;
             font-size: 12px;
@@ -78,7 +92,8 @@
 <body>
 
     <header class="topo">
-        <h2>Relatório de Diárias</h2>
+        <h2>RELATÓRIO DE DIÁRIAS</h2>
+        <img src="Brasão_de_Marília.jpg" alt="Brasão de Marília" class="brasao">
     </header>
 
     <main class="container">
@@ -132,8 +147,7 @@
                     <th>Finalidade</th>
                 </tr>
             </thead>
-            <tbody>
-                </tbody>
+            <tbody></tbody>
         </table>
     </main>
 
@@ -141,7 +155,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
-        const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo"; // Seu ID do Google Sheets
+        const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo";
         let tabela;
         let dadosGlobais = [];
 
@@ -149,10 +163,7 @@
             return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
         }
 
-        // --- Processamento de Dados ---
-
         function csvParaArray(str) {
-            // Regex avançado que corta nas vírgulas, mas ignora vírgulas dentro de aspas duplas (ex: "150,00")
             const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
             const linhas = str.trim().split("\n");
             const cabecalho = linhas[0].split(regex).map(c => c.replace(/^"|"$/g, '').trim().toLowerCase());
@@ -170,61 +181,36 @@
         function extrairData(dataStr) {
             if (!dataStr) return {};
             const partes = dataStr.split("/");
-            return {
-                mes: partes[1],
-                ano: partes[2]
-            };
+            return { mes: partes[1], ano: partes[2] };
         }
 
         function formatarDataParaOrdenacao(dataStr) {
-            if (!dataStr) return "00000000"; // Caso a célula esteja vazia
+            if (!dataStr) return "00000000";
             const partes = dataStr.split("/");
             if (partes.length !== 3) return dataStr; 
-            
-            // Retorna no formato AAAAMMDD (ex: 20260515)
             return `${partes[2]}${partes[1]}${partes[0]}`;
         }
 
         function formatarMoeda(valor) {
-            if (!valor) return ""; // Retorna vazio se não houver valor
-            
+            if (!valor) return "";
             let valorLimpo = valor.trim();
+            if (valorLimpo === "0" || valorLimpo === "0,00" || valorLimpo === "R$ 0,00" || valorLimpo === "0.00") return "-";
             
-            // Se o valor for zero, retorna apenas o traço
-            if (valorLimpo === "0" || valorLimpo === "0,00" || valorLimpo === "R$ 0,00" || valorLimpo === "0.00") {
-                return "-";
-            }
-
-            // Limpa o R$ se ele já vier da planilha para podermos formatar corretamente
             valorLimpo = valorLimpo.replace(/R\$\s?/g, "").trim();
-
-            // Se não possui vírgula, significa que é um número inteiro (ex: 150)
             if (!valorLimpo.includes(",")) {
                 valorLimpo += ",00";
             } else {
-                // Caso tenha vírgula, garante que tenha duas casas decimais (ex: "150,5" vira "150,50")
                 const casasDecimais = valorLimpo.split(",")[1];
-                if (casasDecimais && casasDecimais.length === 1) {
-                    valorLimpo += "0";
-                }
+                if (casasDecimais && casasDecimais.length === 1) valorLimpo += "0";
             }
-
             return `R$ ${valorLimpo}`;
         }
-
-        // --- Interface ---
 
         function preencherFiltros() {
             const servidores = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
             const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].sort();
-
-            servidores.forEach(s => {
-                if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`);
-            });
-
-            anos.forEach(a => {
-                if (a) $('#filtroAno').append(`<option value="${a}">${a}</option>`);
-            });
+            servidores.forEach(s => { if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); });
+            anos.forEach(a => { if (a) $('#filtroAno').append(`<option value="${a}">${a}</option>`); });
         }
 
         function render(dados) {
@@ -232,7 +218,6 @@
             dados.forEach(d => {
                 const ordemPartida = formatarDataParaOrdenacao(d["data da partida"]);
                 const ordemRetorno = formatarDataParaOrdenacao(d["data do retorno"]);
-
                 html += `
                     <tr>
                         <td>${d.servidor || ""}</td>
@@ -248,23 +233,15 @@
                     </tr>`;
             });
 
-            if (tabela) {
-                tabela.destroy();
-            }
-            
+            if (tabela) tabela.destroy();
             $('#tabela tbody').html(html);
             
-            // Tabela configurada para 10 resultados por página
             tabela = $('#tabela').DataTable({
                 pageLength: 10,
                 scrollX: true,
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
-                }
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' }
             });
         }
-
-        // --- Ações ---
 
         async function carregar() {
             try {
@@ -273,24 +250,17 @@
                 dadosGlobais = csvParaArray(csv);
                 preencherFiltros();
                 render(dadosGlobais);
-            } catch (erro) {
-                console.error("Erro ao carregar dados:", erro);
-            }
+            } catch (erro) { console.error("Erro:", erro); }
         }
 
         function aplicarFiltros() {
             const serv = $('#filtroServidor').val();
             const mes = $('#filtroMes').val();
             const ano = $('#filtroAno').val();
-
             let filtrado = dadosGlobais.filter(d => {
                 const dt = extrairData(d["data da partida"]);
-                const matchServ = !serv || d.servidor === serv;
-                const matchMes = !mes || dt.mes === mes;
-                const matchAno = !ano || dt.ano === ano;
-                return matchServ && matchMes && matchAno;
+                return (!serv || d.servidor === serv) && (!mes || dt.mes === mes) && (!ano || dt.ano === ano);
             });
-
             render(filtrado);
         }
 
@@ -299,15 +269,11 @@
             render(dadosGlobais);
         }
 
-        // --- Exportação ---
-
         function baixar(content, name, type) {
             const blob = new Blob([content], { type });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
-            a.href = url;
-            a.download = name;
-            a.click();
+            a.href = url; a.download = name; a.click();
             URL.revokeObjectURL(url);
         }
 
@@ -326,14 +292,10 @@
             baixar(JSON.stringify(dadosGlobais, null, 2), "diarias.json", "application/json");
         }
 
-        // --- Inicialização ---
-
         $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
 
         window.onload = async function () {
             await carregar();
-            
-            // Filtro automático para o mês/ano atual ao abrir a página
             const hoje = new Date();
             $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
             $('#filtroAno').val(String(hoje.getFullYear()));
