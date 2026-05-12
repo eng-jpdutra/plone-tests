@@ -6,6 +6,7 @@
     <title>Relatório de Diárias</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         body {
@@ -26,7 +27,6 @@
 
         .topo h2 {
             margin: 0;
-            text-transform: uppercase;
             font-size: 1.5rem;
             letter-spacing: 1px;
         }
@@ -45,9 +45,9 @@
         }
 
         .texto-camara {
-            font-size: 11px;
+            font-size: 12px; /* Aumentei levemente para melhorar a leitura */
             font-weight: bold;
-            text-transform: uppercase;
+            /* text-transform: uppercase; (Removido) */
             letter-spacing: 0.5px;
         }
 
@@ -110,11 +110,11 @@
 
         /* Ocultar o texto "Pesquisar:" mas manter a caixa de busca visível */
         .dataTables_wrapper .dataTables_filter label {
-            font-size: 0; /* Esconde o texto escrito */
+            font-size: 0;
         }
         
         .dataTables_wrapper .dataTables_filter input {
-            font-size: 14px; /* Garante que o que for digitado na caixa tenha o tamanho normal */
+            font-size: 14px;
             margin-left: 0;
             padding: 6px 10px;
         }
@@ -183,6 +183,7 @@
 
             <div class="toolbar-row">
                 <button onclick="exportarCSV()">Download CSV</button>
+                <button onclick="exportarXLSX()">Download XLSX</button>
                 <button onclick="exportarJSON()">Download JSON</button>
             </div>
         </div>
@@ -296,7 +297,6 @@
                 scrollX: true,
                 language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
                 initComplete: function() {
-                    // Adiciona o texto cinza clarinho dentro da caixa de busca
                     $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...');
                 }
             });
@@ -328,13 +328,7 @@
             render(dadosGlobais);
         }
 
-        function baixar(content, name, type) {
-            const blob = new Blob([content], { type });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url; a.download = name; a.click();
-            URL.revokeObjectURL(url);
-        }
+        // --- Funções de Exportação ---
 
         function exportarCSV() {
             if (!dadosGlobais.length) return;
@@ -344,11 +338,27 @@
                 const linha = headers.map(h => `"${(item[h] || "").replace(/"/g, '""')}"`);
                 csv += linha.join(",") + "\n";
             });
-            baixar(csv, "diarias.csv", "text/csv");
+            baixarArquivo(csv, "diarias.csv", "text/csv");
+        }
+
+        function exportarXLSX() {
+            if (!dadosGlobais.length) return;
+            const worksheet = XLSX.utils.json_to_sheet(dadosGlobais);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias");
+            XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
         }
 
         function exportarJSON() {
-            baixar(JSON.stringify(dadosGlobais, null, 2), "diarias.json", "application/json");
+            baixarArquivo(JSON.stringify(dadosGlobais, null, 2), "diarias.json", "application/json");
+        }
+
+        function baixarArquivo(content, name, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = name; a.click();
+            URL.revokeObjectURL(url);
         }
 
         $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
