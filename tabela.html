@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Relatório de Diárias</title>
 
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
     <style>
         body {
-            font-family: Inter, Arial;
+            font-family: 'Inter', Arial, sans-serif;
             margin: 0;
             background: #f4f6f9;
         }
 
+        /* Cabeçalho */
         .topo {
             background: #003b75;
             color: white;
@@ -22,18 +22,21 @@
             padding: 14px;
         }
 
+        /* Layout Principal */
         .container {
             background: white;
             margin: 12px;
             padding: 12px;
             border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
+        /* Controles e Filtros */
         .toolbar {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         .toolbar-row {
@@ -43,9 +46,10 @@
         }
 
         select, button {
-            padding: 6px 10px;
+            padding: 8px 12px;
             border-radius: 6px;
             border: 1px solid #ccc;
+            font-size: 14px;
         }
 
         button {
@@ -53,33 +57,32 @@
             color: white;
             border: none;
             cursor: pointer;
+            transition: background 0.3s;
         }
 
         button:hover {
             background: #002a52;
         }
 
+        /* Customização DataTables */
         table.dataTable thead th {
             background: #003b75 !important;
             color: white !important;
             text-transform: uppercase;
             font-size: 12px;
+            padding: 12px;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="topo">
+    <header class="topo">
         <h2>Relatório de Diárias</h2>
-    </div>
+    </header>
 
-    <div class="container">
-
-        <!-- TOOLBAR -->
+    <main class="container">
         <div class="toolbar">
-
-            <!-- FILTROS -->
             <div class="toolbar-row">
                 <select id="filtroServidor">
                     <option value="">Servidor</option>
@@ -108,12 +111,10 @@
                 <button onclick="limparFiltros()">Limpar filtros</button>
             </div>
 
-            <!-- EXPORTAÇÃO -->
             <div class="toolbar-row">
                 <button onclick="exportarCSV()">Download CSV</button>
                 <button onclick="exportarJSON()">Download JSON</button>
             </div>
-
         </div>
 
         <table id="tabela" class="display nowrap" style="width:100%">
@@ -131,56 +132,56 @@
                     <th>Finalidade</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+                </tbody>
         </table>
-
-    </div>
+    </main>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <script>
-        const SHEET_ID = "SEU_ID_AQUI";
-
+        const SHEET_ID = "1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo"; // ID extraído do seu link
         let tabela;
         let dadosGlobais = [];
 
         function getSheetUrl() {
-            return `https://docs.google.com/spreadsheets/d/1XP67Ojd_HK3S1IPvC_9eY32-lf0_qI3jfBfrLzasvQo/export?format=csv&t=${Date.now()}`;
+            return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`;
         }
+
+        // --- Processamento de Dados ---
 
         function csvParaArray(str) {
             const linhas = str.trim().split("\n");
-            const cab = linhas[0].split(",");
+            const cabecalho = linhas[0].split(",");
 
-            return linhas.slice(1).map(l => {
-                const vals = l.split(",");
+            return linhas.slice(1).map(linha => {
+                const valores = linha.split(",");
                 let obj = {};
-
-                cab.forEach((c, i) => {
-                    obj[c.trim()] = (vals[i] || "").trim();
+                cabecalho.forEach((coluna, i) => {
+                    obj[coluna.trim().toLowerCase()] = (valores[i] || "").trim();
                 });
-
                 return obj;
             });
         }
 
-        function extrairData(data) {
-            if (!data) return {};
-            const p = data.split("/");
-
+        function extrairData(dataStr) {
+            if (!dataStr) return {};
+            const partes = dataStr.split("/");
             return {
-                mes: p[1],
-                ano: p[2]
+                mes: partes[1],
+                ano: partes[2]
             };
         }
 
+        // --- Interface ---
+
         function preencherFiltros() {
-            const servidores = [...new Set(dadosGlobais.map(d => d.servidor))];
-            const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))];
+            const servidores = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
+            const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].sort();
 
             servidores.forEach(s => {
-                $('#filtroServidor').append(`<option value="${s}">${s}</option>`);
+                if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`);
             });
 
             anos.forEach(a => {
@@ -190,7 +191,6 @@
 
         function render(dados) {
             let html = "";
-
             dados.forEach(d => {
                 html += `
                     <tr>
@@ -204,31 +204,35 @@
                         <td>${d["local de destino"] || ""}</td>
                         <td>${d.cidade || ""}</td>
                         <td>${d.finalidade || ""}</td>
-                    </tr>
-                `;
+                    </tr>`;
             });
 
-            $('#tabela tbody').html(html);
-
-            if (!tabela) {
-                tabela = $('#tabela').DataTable({
-                    pageLength: 10,
-                    scrollX: true
-                });
-            } else {
-                tabela.clear().destroy();
-                tabela = $('#tabela').DataTable();
+            if (tabela) {
+                tabela.destroy();
             }
+            
+            $('#tabela tbody').html(html);
+            tabela = $('#tabela').DataTable({
+                pageLength: 15,
+                scrollX: true,
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json'
+                }
+            });
         }
 
+        // --- Ações ---
+
         async function carregar() {
-            const res = await fetch(getSheetUrl(), { cache: "no-store" });
-            const csv = await res.text();
-
-            dadosGlobais = csvParaArray(csv);
-
-            preencherFiltros();
-            render(dadosGlobais);
+            try {
+                const res = await fetch(getSheetUrl(), { cache: "no-store" });
+                const csv = await res.text();
+                dadosGlobais = csvParaArray(csv);
+                preencherFiltros();
+                render(dadosGlobais);
+            } catch (erro) {
+                console.error("Erro ao carregar dados:", erro);
+            }
         }
 
         function aplicarFiltros() {
@@ -236,36 +240,42 @@
             const mes = $('#filtroMes').val();
             const ano = $('#filtroAno').val();
 
-            let filtrado = dadosGlobais;
-
-            if (serv) filtrado = filtrado.filter(d => d.servidor === serv);
-
-            if (mes || ano) {
-                filtrado = filtrado.filter(d => {
-                    const dt = extrairData(d["data da partida"]);
-                    return (!mes || dt.mes === mes) && (!ano || dt.ano === ano);
-                });
-            }
+            let filtrado = dadosGlobais.filter(d => {
+                const dt = extrairData(d["data da partida"]);
+                const matchServ = !serv || d.servidor === serv;
+                const matchMes = !mes || dt.mes === mes;
+                const matchAno = !ano || dt.ano === ano;
+                return matchServ && matchMes && matchAno;
+            });
 
             render(filtrado);
         }
-
-        $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
 
         function limparFiltros() {
             $('#filtroServidor, #filtroMes, #filtroAno').val('');
             render(dadosGlobais);
         }
 
-        function exportarCSV() {
-            const headers = Object.keys(dadosGlobais[0] || {});
-            let csv = headers.join(",") + "\n";
+        // --- Exportação ---
 
+        function baixar(content, name, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = name;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarCSV() {
+            if (!dadosGlobais.length) return;
+            const headers = Object.keys(dadosGlobais[0]);
+            let csv = headers.join(",") + "\n";
             dadosGlobais.forEach(item => {
                 const linha = headers.map(h => `"${(item[h] || "").replace(/"/g, '""')}"`);
                 csv += linha.join(",") + "\n";
             });
-
             baixar(csv, "diarias.csv", "text/csv");
         }
 
@@ -273,37 +283,18 @@
             baixar(JSON.stringify(dadosGlobais, null, 2), "diarias.json", "application/json");
         }
 
-        function baixar(content, name, type) {
-            const blob = new Blob([content], { type });
-            const url = URL.createObjectURL(blob);
+        // --- Inicialização ---
 
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = name;
-            a.click();
-
-            URL.revokeObjectURL(url);
-        }
-
-        function aplicarFiltroAtualPadrao() {
-            const hoje = new Date();
-
-            const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-            const ano = String(hoje.getFullYear());
-
-            if (!$('#filtroMes').val() && !$('#filtroAno').val()) {
-                $('#filtroMes').val(mes);
-                $('#filtroAno').val(ano);
-            }
-
-            aplicarFiltros();
-        }
+        $('#filtroServidor, #filtroMes, #filtroAno').on('change', aplicarFiltros);
 
         window.onload = async function () {
             await carregar();
-            aplicarFiltroAtualPadrao();
+            // Filtro automático para o mês/ano atual (opcional)
+            const hoje = new Date();
+            $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
+            $('#filtroAno').val(String(hoje.getFullYear()));
+            aplicarFiltros();
         };
     </script>
-
 </body>
 </html>
