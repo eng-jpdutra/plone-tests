@@ -167,9 +167,7 @@
         <div class="toolbar">
             <div class="toolbar-row">
                 <select id="filtroGabinete"><option value="">Gabinete</option></select>
-                
                 <select id="filtroServidor"><option value="">Servidor</option></select>
-                
                 <select id="filtroMes">
                     <option value="">Mês</option>
                     <option value="01">Janeiro</option> <option value="02">Fevereiro</option>
@@ -180,7 +178,6 @@
                     <option value="11">Novembro</option> <option value="12">Dezembro</option>
                 </select>
                 <select id="filtroAno"><option value="">Ano</option></select>
-                
                 <button onclick="limparFiltros()">Limpar filtros</button>
             </div>
 
@@ -232,14 +229,42 @@
 
         function getSheetUrl() { return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&t=${Date.now()}`; }
 
+        // Nova função segura para ler CSV (Imune a travamentos por aspas erradas)
         function csvParaArray(str) {
-            const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/; 
             const linhas = str.trim().split("\n");
-            const cabecalho = linhas[0].split(regex).map(c => c.replace(/^"|"$/g, '').trim().toLowerCase());
-            return linhas.slice(1).map(linha => {
-                const valores = linha.split(regex);
+            if(linhas.length === 0) return [];
+            
+            const cabecalhoLinha = linhas.shift();
+
+            // Lógica manual que lê letra por letra com segurança
+            function extrairValores(linha) {
+                let valores = [];
+                let dentroDeAspas = false;
+                let valorAtual = "";
+
+                for (let i = 0; i < linha.length; i++) {
+                    let char = linha[i];
+                    if (char === '"') {
+                        dentroDeAspas = !dentroDeAspas;
+                    } else if (char === ',' && !dentroDeAspas) {
+                        valores.push(valorAtual);
+                        valorAtual = "";
+                    } else {
+                        valorAtual += char;
+                    }
+                }
+                valores.push(valorAtual);
+                return valores.map(v => v.replace(/^"|"$/g, '').trim());
+            }
+
+            const cabecalho = extrairValores(cabecalhoLinha).map(c => c.toLowerCase());
+
+            return linhas.map(linha => {
+                const valores = extrairValores(linha);
                 let obj = {};
-                cabecalho.forEach((coluna, i) => { obj[coluna] = (valores[i] || "").replace(/^"|"$/g, '').trim(); });
+                cabecalho.forEach((coluna, i) => {
+                    obj[coluna] = valores[i] || "";
+                });
                 return obj;
             });
         }
@@ -272,7 +297,6 @@
             return `R$ ${valorLimpo}`;
         }
 
-        // Função útil para ignorar acentos (ex: Júnior == Junior)
         function removerAcentos(str) {
             return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         }
@@ -289,4 +313,217 @@
             const servidores = [...new Set(dadosGlobais.map(d => d.servidor))].sort();
             const anos = [...new Set(dadosGlobais.map(d => extrairData(d["data da partida"]).ano))].sort();
             
-            // Lógica para extrair intel
+            const gabinetesSet = new Set();
+            dadosGlobais.forEach(d => {
+                const cargo = (d["cargo ou função"] || "").trim();
+                const cargoLower = cargo.toLowerCase();
+                const servidor = (d.servidor || "").trim();
+
+                if (cargoLower === "vereador" || cargoLower === "vereadora" || cargoLower === "presidente da câmara") {
+                    gabinetesSet.add(servidor);
+                } 
+                else if (cargoLower.includes("vereador ") || cargoLower.includes("vereadora ")) {
+                    const match = cargo.match(/vereador[a]?\s+(.+)/i);
+                    if (match && match[1]) {
+                        gabinetesSet.add(match[1].trim());
+                    }
+                }
+            });
+            const gabinetes = [...gabinetesSet].sort();
+
+            servidores.forEach(s => { if(s) $('#filtroServidor').append(`<option value="${s}">${s}</option>`); });
+            anos.forEach(a => { if (a) $('#filtroAno').append(`<option value="${a}">${a}</option>`); });
+            gabinetes.forEach(g => { if (g) $('#filtroGabinete').append(`<option value="${g}">${g}</option>`); });
+
+            $('#filtroServidor').val(valServidor);
+            $('#filtroAno').val(valAno);
+            $('#filtroGabinete').val(valGabinete);
+        }
+
+        function render(dados) {
+            let html = "";
+            dados.forEach(d => {
+                const ordemPartida = formatarDataParaOrdenacao(d["data da partida"]);
+                const ordemRetorno = formatarDataParaOrdenacao(d["data do retorno"]);
+                html += `
+                    <tr>
+                        <td>${d.servidor || ""}</td>
+                        <td>${d["cargo ou função"] || ""}</td>
+                        <td>${d["n de diárias"] || ""}</td>
+                        <td>${formatarMoeda(d["valor diarias"])}</td>
+                        <td>${formatarMoeda(d["valor adiantamento"])}</td>
+                        <td data-sort="${ordemPartida}">${d["data da partida"] || ""}</td>
+                        <td data-sort="${ordemRetorno}">${d["data do retorno"] || ""}</td>
+                        <td>${d["local de destino"] || ""}</td>
+                        <td>${d.cidade || ""}</td>
+                        <td>${d.finalidade || ""}</td>
+                    </tr>`;
+            });
+
+            if (tabela) tabela.destroy();
+            $('#tabela tbody').html(html);
+            
+            tabela = $('#tabela').DataTable({
+                pageLength: 10,
+                responsive: true,
+                language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/pt-BR.json' },
+                initComplete: function() {
+                    $('.dataTables_filter input').attr('placeholder', 'Buscar na tabela...');
+                },
+                footerCallback: function (row, data, start, end, display) {
+                    let api = this.api();
+
+                    let intVal = function (i) {
+                        if (typeof i === 'string') {
+                            if (i === "-") return 0;
+                            return parseFloat(i.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.'));
+                        }
+                        return typeof i === 'number' ? i : 0;
+                    };
+
+                    let totalDiarias = api.column(3, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
+                    let totalAdiantamento = api.column(4, { search: 'applied' }).data().reduce((a, b) => intVal(a) + intVal(b), 0);
+
+                    let formatador = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                    $(api.column(3).footer()).html(formatador.format(totalDiarias));
+                    $(api.column(4).footer()).html(formatador.format(totalAdiantamento));
+                }
+            });
+        }
+
+        async function iniciarCarregamento() {
+            $('#loader').show();
+            $('#main-container').hide();
+            $('#loader').html('<div class="spinner"></div><span>Buscando dados na planilha...</span>');
+            
+            try {
+                const res = await fetch(getSheetUrl(), { cache: "no-store" });
+                const txt = await res.text();
+
+                // Identifica se o Google não retornou um CSV por falta de permissão na planilha
+                if (txt.trim().toLowerCase().startsWith("<!doctype") || txt.trim().toLowerCase().startsWith("<html")) {
+                    throw new Error("A planilha não está com a permissão 'Qualquer pessoa com o link'.");
+                }
+
+                dadosGlobais = csvParaArray(txt);
+                preencherFiltros();
+                
+                if (!$('#filtroMes').val() && !$('#filtroAno').val()) {
+                    const hoje = new Date();
+                    $('#filtroMes').val(String(hoje.getMonth() + 1).padStart(2, "0"));
+                    $('#filtroAno').val(String(hoje.getFullYear()));
+                }
+
+                aplicarFiltros(); 
+                
+                $('#loader').hide();
+                $('#main-container').fadeIn(); 
+
+            } catch (erro) { 
+                console.error("Erro na tabela:", erro); 
+                // Nova tela de aviso visual amigável (nunca mais ficará girando infinito)
+                $('#loader').html(`
+                    <div style="text-align: center; color: #c1272d; background: #ffebeb; padding: 20px; border-radius: 8px; border: 1px solid #c1272d;">
+                        <h3 style="margin: 0 0 10px 0;">⚠️ Erro de Comunicação com a Planilha</h3>
+                        <p style="margin: 0 0 15px 0; font-size: 14px;">${erro.message || "Não foi possível baixar as informações."}</p>
+                        <button onclick="location.reload()" style="padding: 10px 15px; background: #003b75; color: white; border: none; border-radius: 5px; cursor: pointer;">Tentar Novamente</button>
+                    </div>
+                `);
+            }
+        }
+
+        function aplicarFiltros() {
+            const serv = $('#filtroServidor').val();
+            const mes = $('#filtroMes').val();
+            const ano = $('#filtroAno').val();
+            const gab = $('#filtroGabinete').val();
+            
+            dadosFiltrados = dadosGlobais.filter(d => {
+                const dt = extrairData(d["data da partida"]);
+                const matchServ = !serv || d.servidor === serv;
+                const matchMes = !mes || dt.mes === mes;
+                const matchAno = !ano || dt.ano === ano;
+                
+                let matchGab = true;
+                if (gab) {
+                    const gabLimpo = removerAcentos(gab).toLowerCase();
+                    const nomeLimpo = removerAcentos(d.servidor || "").toLowerCase();
+                    const cargoLimpo = removerAcentos(d["cargo ou função"] || "").toLowerCase();
+                    
+                    matchGab = nomeLimpo.includes(gabLimpo) || cargoLimpo.includes(gabLimpo);
+                }
+
+                return matchServ && matchMes && matchAno && matchGab;
+            });
+            
+            render(dadosFiltrados);
+        }
+
+        function limparFiltros() {
+            $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').val('');
+            dadosFiltrados = [...dadosGlobais];
+            render(dadosGlobais);
+        }
+
+        // Funções de exportação
+        function exportarCSV() {
+            const dadosParaExportar = tabela.rows({ filter: 'applied' }).data().toArray();
+            if (!dadosParaExportar.length) return;
+            const headers = ["Servidor", "Cargo", "N Diárias", "Valor Diárias", "Adiantamento", "Data Partida", "Data Retorno", "Destino", "Cidade", "Finalidade"];
+            let csv = headers.join(",") + "\n";
+            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
+                const row = this.node();
+                const colunas = $(row).find('td').map(function() { return `"${$(this).text().replace(/"/g, '""')}"`; }).get();
+                csv += colunas.join(",") + "\n";
+            });
+            baixarArquivo(csv, "diarias_filtradas.csv", "text/csv");
+        }
+
+        function exportarXLSX() {
+            const dadosDaTabela = [];
+            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
+                const row = this.node();
+                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
+                dadosDaTabela.push({
+                    "Servidor": colunas[0], "Cargo": colunas[1], "Nº Diárias": colunas[2], "Valor Diárias": colunas[3],
+                    "Adiantamento": colunas[4], "Data Partida": colunas[5], "Data Retorno": colunas[6],
+                    "Destino": colunas[7], "Cidade": colunas[8], "Finalidade": colunas[9]
+                });
+            });
+            const worksheet = XLSX.utils.json_to_sheet(dadosDaTabela);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Diárias Filtradas");
+            XLSX.writeFile(workbook, "relatorio_diarias.xlsx");
+        }
+
+        function exportarJSON() {
+            const dadosDaTabela = [];
+            $('#tabela').DataTable().rows({ filter: 'applied' }).every(function() {
+                const row = this.node();
+                const colunas = $(row).find('td').map(function() { return $(this).text(); }).get();
+                dadosDaTabela.push({
+                    servidor: colunas[0], cargo: colunas[1], num_diarias: colunas[2], valor_diarias: colunas[3],
+                    adiantamento: colunas[4], data_partida: colunas[5], data_retorno: colunas[6],
+                    destino: colunas[7], cidade: colunas[8], finalidade: colunas[9]
+                });
+            });
+            baixarArquivo(JSON.stringify(dadosDaTabela, null, 2), "diarias_filtradas.json", "application/json");
+        }
+
+        function baixarArquivo(content, name, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = name; a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        $('#filtroServidor, #filtroMes, #filtroAno, #filtroGabinete').on('change', aplicarFiltros);
+
+        window.onload = function () {
+            iniciarCarregamento();
+        };
+    </script>
+</body>
+</html>
