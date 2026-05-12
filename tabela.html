@@ -16,7 +16,7 @@
 
         /* Cabeçalho Ajustado */
         .topo {
-            background: #003b75; /* Azul original retornado */
+            background: #003b75;
             color: white;
             padding: 10px 30px;
             display: flex;
@@ -40,7 +40,7 @@
         }
 
         .brasao {
-            height: 70px; /* Tamanho ajustado para caber o texto perfeitamente */
+            height: 70px;
             width: auto;
         }
 
@@ -82,7 +82,7 @@
         }
 
         button {
-            background: #003b75; /* Azul original retornado */
+            background: #003b75;
             color: white;
             border: none;
             cursor: pointer;
@@ -90,16 +90,22 @@
         }
 
         button:hover {
-            background: #002a52; /* Azul Escuro */
+            background: #002a52;
         }
 
-        /* Customização DataTables (Cabeçalho da Tabela Azul) */
+        /* Customização DataTables */
         table.dataTable thead th {
             background: #003b75 !important;
             color: white !important;
             text-transform: uppercase;
             font-size: 12px;
             padding: 12px;
+        }
+
+        /* Espaçamento entre o "Pesquisar" e a Tabela */
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_length {
+            margin-bottom: 20px;
         }
     </style>
 </head>
